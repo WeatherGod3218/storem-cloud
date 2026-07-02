@@ -1,5 +1,5 @@
 services:
-  server:
+  weather-reels-watcher:
     build: .
     ports:
       - "8080:8080"

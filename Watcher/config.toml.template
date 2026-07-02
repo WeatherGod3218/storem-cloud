@@ -1,0 +1,2 @@
+directory = 'C:\' # Base Directory to start
+levels = 1 # Amount of directory levels to add to watcher
