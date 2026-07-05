@@ -1,6 +1,7 @@
 package models
 
 type Config struct {
-	Directory string
-	Levels    int
+	Directories  []string
+	Levels       int
+	Fullfilehash bool
 }

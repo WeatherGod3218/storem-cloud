@@ -1,2 +1,3 @@
-directory = 'C:\' # Base Directory to start
+directory = ['C:\'] # Base Directory to start
 levels = 1 # Amount of directory levels to add to watcher
+fullfilehash = false # Whether to hash by just filename, or the entire file contents

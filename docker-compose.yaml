@@ -1,0 +1,24 @@
+services:
+  weather-reels-watcher:
+    build: ./Watcher/
+    env_file:
+      - ./Watcher/.env
+    networks:
+      - weather-reels
+
+    volumes:
+      - type: bind
+        source: E:\AssetFolder\BackUp\Video Files\MedalFiles\Clips
+        target: /clips
+
+  weather-reels-server:
+    build: ./Server/
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./Server/.env
+    networks:
+      - weather-reels
+      
+networks:
+  weather-reels:
