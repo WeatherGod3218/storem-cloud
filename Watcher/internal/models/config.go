@@ -2,8 +2,8 @@ package models
 
 type DirectoryConfig struct {
 	Path                  string `yaml:"path"`
-	IncludeSubDirectories bool   `yaml:"includeSubdirectories"`
-	SubDirectoryLevels    int    `yaml:"subdirectoryLevels"`
+	IncludeSubDirectories bool   `yaml:"includeSubDirectories"`
+	SubDirectoryLevels    int    `yaml:"subDirectoryLevels"`
 }
 
 type Config struct {

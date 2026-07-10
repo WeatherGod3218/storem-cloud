@@ -4,24 +4,20 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/backup"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/filehandler"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/scanner"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/verify"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/watcher"
+
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-yaml/yaml"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
-
-	watcher, err := filehandler.InitWatcher() // Make Watcher
-	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
-	}
-	defer watcher.Close()
-
 	cfgFile, err := os.ReadFile("config.yaml")
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
@@ -32,11 +28,31 @@ func main() {
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error loading config file!")
 	}
-	//Send Hashes Files to Server For Validation
 
-	time.Sleep(5 * time.Second)
+	if len(config.Directories) <= 0 {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("No directories were set to be backed up!")
+	}
 
-	err = backup.ValidateFilesForBackup()
+	upload.InitTusio()
+
+	var wtch *fsnotify.Watcher
+
+	if config.BackupDuringRuntime {
+		wtch, err = watcher.InitWatcher() // Make Watcher
+		if err != nil {
+			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
+		}
+		defer wtch.Close()
+	}
+
+	if err := scanner.ScanFiles(config, wtch); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error scanning files for verification")
+	}
+
+	if err := verify.ValidateFilesForBackup(); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error validating files for backup!")
+	}
+
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Warning("Failed to send data!")
 	}

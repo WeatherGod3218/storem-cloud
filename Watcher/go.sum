@@ -1,5 +1,7 @@
 github.com/alfg/mp4 v0.0.0-20210728035756-55ea58c08aeb h1:v8z8Yym2Z/NCYgXO/aFqmYDYa/d3uRyVMq1DjgMfzn4=
 github.com/alfg/mp4 v0.0.0-20210728035756-55ea58c08aeb/go.mod h1:RfuO8OqkqAcWXXkaS3MuymrBQJbKJWi04H/bs6vNvh0=
+github.com/bdragon300/tusgo v0.2.0 h1:8mtW0X0VHADiz30Hw7Ate9uRkOPenqodHNpBOWVAQnw=
+github.com/bdragon300/tusgo v0.2.0/go.mod h1:C+JEnr9Mg5aMyd9hCQx6y8DGzbf2gXd3tF6c3Ft7IIw=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fsnotify/fsnotify v1.10.1 h1:b0/UzAf9yR5rhf3RPm9gf3ehBPpf0oZKIjtpKrx59Ho=
