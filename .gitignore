@@ -2,7 +2,7 @@
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # config file
-config.toml
+config.yaml
 
 # Binaries for programs and plugins
 *.exe

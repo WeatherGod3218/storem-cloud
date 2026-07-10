@@ -1,0 +1,340 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/videos/abort": {
+            "post": {
+                "description": "Aborts a multipart video upload and marks the failed record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Abort video upload",
+                "parameters": [
+                    {
+                        "description": "Video information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VideoAbortBackupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/videos/backup": {
+            "post": {
+                "description": "Starts a multipart video upload, creating S3 URLS and marks the record as pending",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Starts a video upload",
+                "parameters": [
+                    {
+                        "description": "Video information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VideoStartBackupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.VideoStartBackupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/videos/complete": {
+            "post": {
+                "description": "Completes a multipart video upload and marks the record as completed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Completes a Video Upload",
+                "parameters": [
+                    {
+                        "description": "Video information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VideoCompleteBackupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/videos/fetch/{video}": {
+            "get": {
+                "description": "Generate a presigned URL for a video file",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Get URL for a video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video filename",
+                        "name": "video",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.AccessVideoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/videos/verify": {
+            "put": {
+                "description": "Verifies videos that are already uploaded, returning a list of ones that are not verified",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Verify uploaded Videos",
+                "parameters": [
+                    {
+                        "description": "List of video filenames",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.AccessVideoResponse": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                },
+                "video": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.VideoAbortBackupRequest": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                },
+                "row_id": {
+                    "type": "string"
+                },
+                "video_s3_upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.VideoCompleteBackupRequest": {
+            "type": "object",
+            "properties": {
+                "completed_parts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.VideoCompletedPart"
+                    }
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "row_id": {
+                    "type": "string"
+                },
+                "video_s3_upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.VideoCompletedPart": {
+            "type": "object",
+            "properties": {
+                "etag": {
+                    "type": "string"
+                },
+                "part_number": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.VideoStartBackupRequest": {
+            "type": "object",
+            "properties": {
+                "filelength": {
+                    "type": "number"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "filesize": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.VideoStartBackupResponse": {
+            "type": "object",
+            "properties": {
+                "row_id": {
+                    "type": "string"
+                },
+                "thumbnail_s3_url": {
+                    "type": "string"
+                },
+                "video_s3_upload_id": {
+                    "type": "string"
+                },
+                "video_s3_urls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.VideoURLPart"
+                    }
+                }
+            }
+        },
+        "models.VideoURLPart": {
+            "type": "object",
+            "properties": {
+                "offset": {
+                    "type": "integer"
+                },
+                "part_number": {
+                    "type": "integer"
+                },
+                "request_url": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-package filehandler
+package verify
 
 import (
 	"sync"
@@ -7,10 +7,6 @@ import (
 var filesToVerify []string = make([]string, 0)
 var mutex sync.Mutex = sync.Mutex{}
 
-// const MAX_CONCURRENT_SCANS = 4
-
-// var sem chan struct{} = make(chan struct{}, MAX_CONCURRENT_SCANS)
-
 func AddFileToVerifyList(file string) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -18,6 +14,6 @@ func AddFileToVerifyList(file string) {
 	filesToVerify = append(filesToVerify, file)
 }
 
-func GetHashedFilesList() []string {
+func GetVerifyList() []string {
 	return filesToVerify
 }

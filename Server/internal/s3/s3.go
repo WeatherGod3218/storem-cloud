@@ -7,9 +7,10 @@ import (
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-var cfg aws.Config
+var s3Client *s3.Client
 
 func InitS3() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -23,7 +24,10 @@ func InitS3() error {
 		return err
 	}
 
-	logging.Logger.Info("S3 Connection has been connected!")
-	cfg = awsCfg
+	s3Client = s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		o.UsePathStyle = true
+		o.BaseEndpoint = aws.String("https://s3.csh.rit.edu/")
+	})
+	logging.Logger.Info("AWS S3 client initialized")
 	return nil
 }

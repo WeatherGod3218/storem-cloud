@@ -9,18 +9,35 @@ import (
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/filehandler"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
+	"github.com/alfg/mp4"
 )
 
-func ValidateHashedFiles() error {
-	hashList := filehandler.GetHashedFilesList()
+const MINIMUM_VIDEO_LENGTH = 5
+
+func getMP4Length(fileName string) (float64, error) {
+	file, err := mp4.Open(fileName)
+	if err != nil {
+		return 0, err
+	}
+
+	if file.Moov == nil || file.Moov.Mvhd == nil {
+		return 0, fmt.Errorf("file does not contain metadata")
+	}
+
+	durationSeconds := (float64(file.Moov.Mvhd.Duration) / float64(file.Moov.Mvhd.Timescale))
+	return durationSeconds, nil
+}
+
+func ValidateFilesForBackup() error {
+	verifyList := filehandler.GetVerifyList()
 
 	logging.Logger.Info("Hashlist?")
-	jsonBytes, err := json.Marshal(hashList)
+	jsonBytes, err := json.Marshal(verifyList)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/videos/verify", os.Getenv("SERVER_URL")), bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/videos/verify", os.Getenv("SERVER_URL")), bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
@@ -33,14 +50,21 @@ func ValidateHashedFiles() error {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Failed to start video request!")
+	}
+
 	var notBacked []string
 	err = json.NewDecoder(res.Body).Decode(&notBacked)
 	if err != nil {
 		return err
 	}
 
-	for _, file := range notBacked {
-		logging.Logger.Info(fmt.Sprintf("Needs to be validated: %s", file))
+	if len(notBacked) > 0 {
+		err := BackupFile(notBacked[0])
+		if err != nil {
+			logging.Logger.Info(fmt.Sprintf("Failure in backup: %s", err))
+		}
 	}
 	return nil
 }

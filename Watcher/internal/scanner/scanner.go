@@ -11,6 +11,7 @@ import (
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/verify"
 	"github.com/sirupsen/logrus"
 )
 
@@ -50,7 +51,7 @@ func ScanSubDirectories(config models.Config, watcher *fsnotify.Watcher, dir str
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				AddFileToVerifyList(filepath.Join(dir, item.Name()))
+				verify.AddFileToVerifyList(filepath.Join(dir, item.Name()))
 				if err != nil {
 					logging.Logger.WithFields(logrus.Fields{"error": err, "module": "filehandler", "method": "ScanSubDirectories"}).Warning(fmt.Sprintf("failed to hash the item %s", item.Name()))
 				}
@@ -106,12 +107,12 @@ func InitWatcher() (*fsnotify.Watcher, error) {
 	var wg sync.WaitGroup
 
 	for _, dir := range config.Directories {
-		err = watcher.Add(dir)
+		err = watcher.Add(dir.Path)
 		if err != nil {
 			return nil, err
 		}
 
-		err = ScanSubDirectories(config, watcher, dir, &wg, config.Levels)
+		err = ScanSubDirectories(config, watcher, dir, &wg)
 		if err != nil {
 			return nil, err
 		}

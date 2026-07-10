@@ -6,6 +6,6 @@ import (
 )
 
 func SetRoutes(router *gin.RouterGroup) {
-	v1Group := router.Group("api/v1")
+	v1Group := router.Group("/v1")
 	videos.Routes(v1Group)
 }

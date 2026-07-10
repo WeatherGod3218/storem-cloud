@@ -15,6 +15,7 @@ func makeLogger() *logrus.Logger {
 	if testing.Testing() {
 		level = logrus.DebugLevel
 	}
+
 	return &logrus.Logger{
 		Out: os.Stdout,
 		Formatter: &logrus.TextFormatter{

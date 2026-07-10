@@ -1,9 +1,8 @@
 package s3
 
 import (
-	"fmt"
-	"net/url"
 	"os"
+	"time"
 )
 
 func GetRegion() string {
@@ -14,6 +13,6 @@ func GetRegion() string {
 	return region
 }
 
-func CreateVideoKey(video string) string {
-	return url.PathEscape(fmt.Sprintf("videos/%s", video))
+func GetPresignURLTime() time.Duration {
+	return (15 * time.Minute)
 }
