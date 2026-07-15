@@ -8,10 +8,9 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-
+import {Badge} from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import {Badge} from "@/components/ui/badge"
 import { useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
 // type props = {
@@ -35,7 +34,6 @@ const DESCRIPTION_MAX_CHAR = 100
 function limitString(text: string): string {
   return text.length > DESCRIPTION_MAX_CHAR ? text.slice(0, DESCRIPTION_MAX_CHAR) : text;
 }
-
 
 export const ThumbnailCard = (props: ThumbnailCardProps) => {
     const [imageLoaded, setImageLoaded] = useState(false);
