@@ -16,7 +16,5 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/watcher .
-COPY config.yaml .
-COPY credentials.yaml .
 
 CMD ["./watcher"]

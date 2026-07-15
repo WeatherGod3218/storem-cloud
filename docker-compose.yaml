@@ -10,7 +10,16 @@ services:
       - type: bind
         source: E:\AssetFolder\BackUp\Video Files\MedalFiles\Clips
         target: /clips
-
+      - type: bind
+        source: ./Watcher/config.yaml
+        target: /app/config.yaml
+        read_only: true
+      - type: bind
+        source: ./Watcher/credentials.yaml
+        target: /app/credentials.yaml
+        read_only: true
+        
+        
   weather-reels-server:
     build: ./Server/
     ports:
@@ -19,6 +28,12 @@ services:
       - ./Server/.env
     networks:
       - weather-reels
-      
+    volumes:
+      - type: bind
+        source: ./Server/config.yaml
+        target: /app/config.yaml
+        read_only: true
+
+
 networks:
   weather-reels:

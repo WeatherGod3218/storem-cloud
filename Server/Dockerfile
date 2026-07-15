@@ -32,8 +32,6 @@ RUN apk add --no-cache ffmpeg
 WORKDIR /app
 COPY --from=gobuilder /app/server .
 
-COPY config.yaml .
-
 EXPOSE 8080
 
 CMD ["./server"]
