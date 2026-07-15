@@ -62,7 +62,7 @@ func InitDatabase() error {
 			status 				video_statuses NOT NULL DEFAULT 'Complete',
 
 			filename			TEXT NOT NULL,
-			file_size  			INT NOT NULL,
+			file_size  			BIGINT NOT NULL,
 			file_length			REAL NOT NULL,
 			file_mod_date		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			
@@ -70,7 +70,7 @@ func InitDatabase() error {
 			custom_description	TEXT,
 			
 			last_verified		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			uploaded_at 		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			uploaded_at 		TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
 	`)
 	if err != nil {
@@ -80,9 +80,9 @@ func InitDatabase() error {
 	_, err = db.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS tags (
 			row_id 		UUID PRIMARY KEY,
-			name 		TEXT NOT NULL,
+			name 		TEXT NOT NULL UNIQUE,
 			created_by	TEXT NOT NULL,
-			created_at 	TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			created_at 	TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
 	`)
 	if err != nil {
@@ -91,8 +91,8 @@ func InitDatabase() error {
 
 	_, err = db.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS video_tags (
-			video_id UUID REFERENCES videos(id) ON DELETE CASCADE,
-			tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
+			video_id UUID REFERENCES videos(row_id) ON DELETE CASCADE,
+			tag_id UUID REFERENCES tags(row_id) ON DELETE CASCADE,
 			added_by TEXT NOT NULL,
 			added_at TIMESTAMP DEFAULT now(),
 			PRIMARY KEY (video_id, tag_id)
@@ -104,7 +104,7 @@ func InitDatabase() error {
 
 	_, err = db.Exec(ctx, `
 		CREATE INDEX IF NOT EXISTS idx_video_file_mod_date_lookup 
-			ON videos(file_mod_date);
+			ON videos(file_mod_date DESC, row_id DESC);
 	`)
 
 	logging.Logger.Info("S3 Connection has been connected!")
