@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const MAX_GROUP_SIZE = 10
+const MAX_ROW_AMOUNT int = 3
 
 func VerifyVideoList(videos []string) ([]string, error) {
 	if len(videos) == 0 {
@@ -65,23 +65,7 @@ func VerifyVideoList(videos []string) ([]string, error) {
 	return missing, nil
 }
 
-func AbortVideoUpload(row_id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	_, err := db.Exec(ctx, `
-		UPDATE videos
-		SET status = 'Failed'
-		WHERE row_id = $2 AND status IS DISTINCT FROM 'Complete'
-	`, row_id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GetVideoGroup(offset *time.Time, rowID string) ([]models.VideoGroupPart, error) {
+func GetVideoGroup(offset *time.Time, rowID string) ([]models.GetVideoGroupPart, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -91,64 +75,94 @@ func GetVideoGroup(offset *time.Time, rowID string) ([]models.VideoGroupPart, er
 	)
 	if offset == nil {
 		rows, err = db.Query(ctx, `
-			SELECT row_id, filename, uploaded_at FROM videos
+			SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
 			WHERE status = 'Complete'
-			ORDER BY uploaded_at DESC, row_id DESC
-			LIMIT 10 
-		`)
+			ORDER BY file_mod_date DESC, row_id DESC
+			LIMIT $1 
+		`, (MAX_ROW_AMOUNT*3)+1)
 	} else {
 		rows, err = db.Query(ctx, `
-			SELECT row_id, filename, uploaded_at FROM videos
+			SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
 			WHERE status = 'Complete'
-			AND (uploaded_at, row_id) < ($1, $2)
-			ORDER BY uploaded_at DESC, row_id DESC
-			LIMIT 10 
-		`, offset, rowID)
+			AND (file_mod_date, row_id) < ($1, $2)
+			ORDER BY file_mod_date DESC, row_id DESC
+			LIMIT $3 
+		`, offset, rowID, (MAX_ROW_AMOUNT*3)+1)
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	videos := make([]models.VideoGroupPart, 0)
+	videos := make([]models.GetVideoGroupPart, 0)
 	for rows.Next() {
 		var (
-			row       string
-			filename  string
-			timestamp time.Time
+			rowId       string
+			s3Id        string
+			customTitle *string
+			customDesc  *string
+			userId      string
+			filename    string
+			timestamp   time.Time
 		)
 
-		if err := rows.Scan(&row, &filename, &timestamp); err != nil {
-			return nil, err
+		if err := rows.Scan(&rowId, &s3Id, &customTitle, &customDesc, &userId, &filename, &timestamp); err != nil {
+			return nil, false, err
 		}
 
-		videos = append(videos, models.VideoGroupPart{
-			RowID:     row,
-			FileName:  filename,
-			Timestamp: timestamp,
+		videos = append(videos, models.GetVideoGroupPart{
+			RowID:             rowId,
+			S3Id:              s3Id,
+			CustomTitle:       customTitle,
+			CustomDescription: customDesc,
+			UserId:            userId,
+			Filename:          filename,
+			Timestamp:         timestamp,
 		})
 	}
 
-	return videos, nil
+	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
+	if hasMore {
+		videos = videos[:(MAX_ROW_AMOUNT * 3)]
+	}
+	return videos, hasMore, nil
 }
 
-func CompleteVideoUpload(row_id string) error {
+func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	_, err := db.Exec(ctx, `
-		UPDATE videos
-		SET status = 'Complete'
+	var (
+		s3Id        string
+		customTitle *string
+		customDesc  *string
+		userId      string
+		filename    string
+		timestamp   time.Time
+	)
+
+	if err := db.QueryRow(ctx, `
+		SELECT s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
 		WHERE row_id = $1
-	`, row_id)
-	if err != nil {
-		return err
+		LIMIT 1 
+	`, rowId).Scan(&s3Id, &customTitle, &customDesc, &userId, &filename, &timestamp); err != nil {
+		return nil, err
 	}
 
-	return nil
+	data := &models.GetVideoDataDatabase{
+		RowID:             rowId,
+		S3Id:              s3Id,
+		CustomTitle:       customTitle,
+		CustomDescription: customDesc,
+		UserId:            userId,
+		Filename:          filename,
+		Timestamp:         timestamp,
+	}
+
+	return data, nil
 }
 
-func StartVideoUpload(video models.VideoBackupProcessed) (string, error) {
+func CreateVideoRow(video models.VideoDatabaseEntry) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -158,14 +172,9 @@ func StartVideoUpload(video models.VideoBackupProcessed) (string, error) {
 	}
 
 	_, err = db.Exec(ctx, `
-		INSERT INTO videos (row_id, filename, filesize, filelength, video_s3_url, thumbnail_s3_url)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (filename)
-		DO UPDATE SET
-			status = 'Pending',
-			last_verified = NOW();
-
-	`, rowId, video.FileName, video.FileSize, video.FileLength, video.VideoS3URL, video.ThumbnailS3URL)
+		INSERT INTO videos (row_id, s3_id, user_id, filename, file_size, file_length, file_mod_date)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, rowId, video.VideoId, video.UserId, video.Filename, video.FileSize, video.FileLength, video.FileModDate)
 
 	if err != nil {
 		return "", err
@@ -191,19 +200,21 @@ func InitVideos() error {
 	_, err = db.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS videos (
 			row_id 				UUID PRIMARY KEY,
-			status 				video_statuses NOT NULL DEFAULT 'Pending',
+			s3_id				TEXT NOT NULL,
+			user_id 			TEXT NOT NULL,
+
+			status 				video_statuses NOT NULL DEFAULT 'Complete',
 
 			filename			TEXT NOT NULL,
-			filesize  			INT NOT NULL,
-			filelength			REAL NOT NULL,
-
-			video_s3_url		TEXT NOT NULL,
-			thumbnail_s3_url	TEXT NOT NULL,
-
-			custom_title	TEXT,
-
-			last_verified	TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			uploaded_at 	TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			file_size  			INT NOT NULL,
+			file_length			REAL NOT NULL,
+			file_mod_date		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			
+			custom_title		TEXT,
+			custom_description	TEXT,
+			
+			last_verified		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			uploaded_at 		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
 			UNIQUE(filename)
 		)
@@ -213,8 +224,8 @@ func InitVideos() error {
 	}
 
 	_, err = db.Exec(ctx, `
-		CREATE INDEX IF NOT EXISTS idx_video_filename_lookup 
-			ON videos(filename);
+		CREATE INDEX IF NOT EXISTS idx_video_file_mod_date_lookup 
+			ON videos(file_mod_date);
 	`)
 
 	return err

@@ -1,0 +1,11 @@
+# USER IDS MUST BE UNIQUE!
+
+users: # List of all the users of the application
+  - userId: 'AbsolutelyBonkersUserId1' # UserID, send this to their client
+    displayName: "NumberOneUserForANumberOneClip" # The display name to be used on clips in the front page
+    totalStorageGB: 350 # The amount of storage the user gets in the application, in Gigabytes
+
+  - userId: 'AbsolutelyBonkersUserId2' # UserID, send this to their client
+    displayName: "IAmTheUserNumber2" # The display name to be used on clips in the front page
+    totalStorageGB: 0 # Leave to zero to give infinite storage
+

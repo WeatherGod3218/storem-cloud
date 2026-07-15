@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
@@ -20,7 +21,7 @@ import (
 func main() {
 	cfgFile, err := os.ReadFile("config.yaml")
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed read in config file!")
 	}
 
 	var config models.Config
@@ -29,16 +30,27 @@ func main() {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error loading config file!")
 	}
 
+	credFile, err := os.ReadFile("credentials.yaml")
+	if err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to read in cred file!")
+	}
+
+	var credentials models.Credentials
+	err = yaml.Unmarshal(credFile, &credentials)
+	if err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error loading credentials file!")
+	}
+
 	if len(config.Directories) <= 0 {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("No directories were set to be backed up!")
 	}
 
-	upload.InitTusio()
+	upload.InitTusio(credentials)
 
 	var wtch *fsnotify.Watcher
 
 	if config.BackupDuringRuntime {
-		wtch, err = watcher.InitWatcher() // Make Watcher
+		wtch, err = watcher.InitWatcher()
 		if err != nil {
 			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
 		}
@@ -49,7 +61,9 @@ func main() {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error scanning files for verification")
 	}
 
-	if err := verify.ValidateFilesForBackup(); err != nil {
+	time.Sleep(time.Second * 5)
+
+	if err := verify.ValidateFilesForBackup(credentials, config); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error validating files for backup!")
 	}
 

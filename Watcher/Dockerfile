@@ -15,10 +15,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg
-RUN mkdir -p thumbnails
-
 COPY --from=builder /app/watcher .
-COPY config.toml .
+COPY config.yaml .
+COPY credentials.yaml .
 
 CMD ["./watcher"]

@@ -20,16 +20,19 @@ type VideoPart struct {
 	Size       int64
 }
 
-type VideoBackupProcessed struct {
-	FileName       string  `json:"filename"`
-	FileLength     float64 `json:"filelength"`
-	FileSize       int64   `json:"filesize"`
-	VideoS3URL     string  `json:"video_s3_url"`
-	ThumbnailS3URL string  `json:"thumbnail_s3_url"`
+type VideoDatabaseEntry struct {
+	Filename    string    `json:"filename"`
+	FileLength  float64   `json:"file_length"`
+	FileSize    int64     `json:"file_size"`
+	FileModDate time.Time `json:"file_mod_date"`
+	VideoId     string    `json:"video_id"`
+	UserId      string    `json:"user_id"`
 }
 
-type VideoGroupPart struct {
-	RowID     string    `json:"row_id"`
-	FileName  string    `json:"filename"`
-	Timestamp time.Time `json:"timestamp"`
+type VideoBackupProcessed struct {
+	Filename       string  `json:"filename"`
+	FileLength     float64 `json:"file_length"`
+	FileSize       int64   `json:"file_size"`
+	VideoS3URL     string  `json:"video_s3_url"`
+	ThumbnailS3URL string  `json:"thumbnail_s3_url"`
 }

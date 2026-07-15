@@ -4,43 +4,46 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"math/rand/v2"
 	"net/http"
 	"os"
+	"slices"
 	"sync"
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
+	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
 )
 
-var filesToVerify []string = make([]string, 0)
+var filesToVerify map[string]string = make(map[string]string)
 var mutex sync.Mutex = sync.Mutex{}
 
 const MINIMUM_VIDEO_LENGTH = 5
 
-func AddFileToVerifyList(file string) {
+func AddFileToVerifyList(file string, baseDir string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	filesToVerify = append(filesToVerify, file)
+	filesToVerify[file] = baseDir
 }
 
-func ValidateFilesForBackup() error {
+func ValidateFilesForBackup(credentials models.Credentials, config models.Config) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	verifyList := filesToVerify
-
-	logging.Logger.Info("Hashlist?")
-	jsonBytes, err := json.Marshal(verifyList)
+	jsonBytes, err := json.Marshal(slices.Collect(maps.Keys(filesToVerify)))
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/videos/verify", os.Getenv("SERVER_URL")), bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v2/videos/verify", os.Getenv("SERVER_URL")), bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
+
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", credentials.ServerAccessCode))
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -60,7 +63,9 @@ func ValidateFilesForBackup() error {
 	}
 
 	if len(notBacked) > 0 {
-		err := upload.UploadVideo(notBacked[0])
+		randNum := rand.IntN(len(notBacked))
+		fileToBack := notBacked[randNum]
+		err := upload.UploadVideo(config, fileToBack, filesToVerify[fileToBack])
 		if err != nil {
 			logging.Logger.Info(fmt.Sprintf("Failure in backup: %s", err))
 		}

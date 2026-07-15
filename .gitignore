@@ -1,8 +1,14 @@
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
+
+
 # config file
 config.yaml
+config.yml
+
+# cred file
+credentials.yaml
+credentials.yml
 
 # Binaries for programs and plugins
 *.exe

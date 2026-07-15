@@ -1,8 +1,6 @@
 package upload
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
@@ -35,14 +35,29 @@ func getMP4Length(fileName string) (float64, error) {
 	return durationSeconds, nil
 }
 
-func createUploadFromFile(file *os.File) (*tusgo.Upload, error) {
+func createUploadFromFile(config models.Config, file *os.File, fileName string, baseDir string) (*tusgo.Upload, error) {
 	finfo, err := file.Stat()
 	if err != nil {
 		return nil, err
 	}
 
+	length, err := getMP4Length(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	if !config.IncludeDirectoryPath {
+		fileName = strings.Trim(fileName, baseDir)
+	}
+
+	metaData := map[string]string{
+		"filename":      fileName,
+		"file_mod_date": strconv.FormatInt(finfo.ModTime().UnixMicro(), 10),
+		"video_length":  strconv.FormatFloat(length, 'f', 2, 64),
+	}
+
 	upload := &tusgo.Upload{}
-	if _, err = client.CreateUpload(upload, finfo.Size(), false, nil); err != nil {
+	if _, err = client.CreateUpload(upload, finfo.Size(), false, metaData); err != nil {
 		return nil, err
 	}
 
@@ -74,8 +89,9 @@ func uploadWithRetry(destination *tusgo.UploadStream, file *os.File) error {
 	return nil
 }
 
-func InitTusio() {
-	baseUrl, _ := url.Parse(fmt.Sprintf("%s/api/v2/upload", os.Getenv("SERVER_HOST")))
+func InitTusio(creds models.Credentials) {
+	baseUrl, _ := url.Parse(fmt.Sprintf("%s/api/v2/files/", creds.ServerURL))
+
 	client = tusgo.NewClient(http.DefaultClient, baseUrl)
 	client.GetRequest = func(method, url string, body io.Reader, tusClient *tusgo.Client, httpClient *http.Client) (*http.Request, error) {
 		req, err := http.NewRequest(method, url, body)
@@ -83,21 +99,21 @@ func InitTusio() {
 			return nil, err
 		}
 
-		req.Header.Set("X-User-Id", "user") //TODO: Add users? would be nifty
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("SERVER_API_KEY")))
+		req.Header.Set("X-User-Id", creds.UserId) //TODO: Add users? would be nifty
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", creds.ServerAccessCode))
 
 		return req, nil
 	}
 }
 
-func UploadVideo(fileName string) error {
+func UploadVideo(config models.Config, fileName string, baseDir string) error {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	upload, err := createUploadFromFile(file)
+	upload, err := createUploadFromFile(config, file, fileName, baseDir)
 	if err != nil {
 		return err
 	}
@@ -106,34 +122,6 @@ func UploadVideo(fileName string) error {
 	if err := uploadWithRetry(stream, file); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func AbortUpload(fileName string, uploadId string) error {
-
-	abortJson := models.VideoAbortBackupRequest{
-		Filename:        fileName,
-		VideoS3UploadID: uploadId,
-	}
-
-	abortBytes, err := json.Marshal(abortJson)
-	if err != nil {
-		return err
-	}
-
-	abortReq, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/videos/abort", os.Getenv("SERVER_URL")), bytes.NewBuffer(abortBytes))
-	if err != nil {
-		return err
-	}
-	abortReq.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	res, err := client.Do(abortReq)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
 
 	return nil
 }
