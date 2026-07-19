@@ -89,6 +89,7 @@ func GetVideoGroup(offset *time.Time, rowID string) ([]models.GetVideoGroupPart,
 			LIMIT $3 
 		`, offset, rowID, (MAX_ROW_AMOUNT*3)+1)
 	}
+	defer rows.Close()
 
 	if err != nil {
 		return nil, false, err
@@ -128,6 +129,56 @@ func GetVideoGroup(offset *time.Time, rowID string) ([]models.GetVideoGroupPart,
 	return videos, hasMore, nil
 }
 
+func GetRandomVideoData() (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	var (
+		rowId string
+	)
+
+	if err := db.QueryRow(ctx, `
+		SELECT row_id FROM videos
+		WHERE status = 'Complete'
+		ORDER BY RANDOM()
+		LIMIT 1
+	`).Scan(&rowId); err != nil {
+		return "", err
+	}
+
+	return rowId, nil
+}
+
+func ChangeVideoTitle(rowId string, title string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	if _, err := db.Exec(ctx, `
+		UPDATE videos
+		SET custom_title = $1
+		WHERE row_id = $2
+	`, title, rowId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ChangeVideoDescription(rowId string, desc string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	if _, err := db.Exec(ctx, `
+		UPDATE videos
+		SET custom_description = $1
+		WHERE row_id = $2
+	`, desc, rowId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -151,7 +202,7 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 
 	data := &models.GetVideoDataDatabase{
 		RowID:             rowId,
-		S3Id:              s3Id,
+		S3ID:              s3Id,
 		CustomTitle:       customTitle,
 		CustomDescription: customDesc,
 		UserId:            userId,

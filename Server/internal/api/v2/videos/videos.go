@@ -94,7 +94,7 @@ func AccessVideo(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/abort [post]
 func GetVideoGroup(c *gin.Context) {
-	var req models.GetVideoGroupRequest
+	var req *models.GetVideoGroupRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoGroup"}).Warning("failed to bind JSON")
@@ -150,6 +150,101 @@ func GetVideoGroup(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// ChangeVideoTitle godoc
+//
+// @Summary      Updates a videos title
+// @Description  Updates a given videoID's title
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.ChangeVideoTitleRequest  true  "New Title"
+// @Success      200      {object}  models.SuccessResponse
+// @Failure      400      {object}  models.ErrorResponse
+// @Router       /api/v2/videos/title [put]
+func ChangeVideoTitle(c *gin.Context) {
+	var req *models.ChangeVideoTitleRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoTitle"}).Warning("failed to bind JSON")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	if err := database.ChangeVideoTitle(req.RowID, req.Title); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoTitle"}).Warning("failed to change title in database")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+	})
+}
+
+// ChangeVideoDescription godoc
+//
+// @Summary      Updates a videos description
+// @Description  Updates a given videoID's description
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New Title"
+// @Success      200      {object}  models.SuccessResponse
+// @Failure      400      {object}  models.ErrorResponse
+// @Router       /api/v2/videos/description [put]
+func ChangeVideoDescription(c *gin.Context) {
+	var req *models.ChangeVideoDescriptionRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to bind JSON")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	if err := database.ChangeVideoDescription(req.RowID, req.Description); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to change description in database")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+	})
+}
+
+// GetRandomVideo godoc
+//
+// @Summary      Get random data for a video
+// @Description  Gets all the required data for a random video display page
+// @Accept       json
+// @Produce      json
+// @Param        request  path     string  true  "Video information"
+// @Success      200      {object}  models.GetRandomVideoResponse
+// @Failure      400      {object}  models.ErrorResponse
+// @Router       /api/v2/videos/random [get]
+func GetRandomVideo(c *gin.Context) {
+	rowId, err := database.GetRandomVideoData()
+	if err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	resp := models.GetRandomVideoResponse{
+		RowID: rowId,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 // GetVideoGroup godoc
 //
 // @Summary      Get data for a video
@@ -180,7 +275,7 @@ func GetVideoData(c *gin.Context) {
 		return
 	}
 
-	videoURL, err := s3.CreateGetPresignedVideoURL(data.S3Id)
+	videoURL, err := s3.CreateGetPresignedVideoURL(data.S3ID)
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -193,7 +288,7 @@ func GetVideoData(c *gin.Context) {
 
 	resp := models.GetVideoDataResponse{
 		RowID: data.RowID,
-		S3Id:  data.S3Id,
+		S3ID:  data.S3ID,
 
 		CustomTitle:       data.CustomTitle,
 		CustomDescription: data.CustomDescription,
@@ -211,5 +306,9 @@ func Routes(r *gin.RouterGroup) {
 
 	videos.PUT("/verify", VerifyVideos)
 	videos.GET("/video/:id", GetVideoData)
+	videos.GET("/random", GetRandomVideo)
 	videos.POST("/group", GetVideoGroup) //TODO: REPLACE THIS WITH QUERY WHEN AVAILABLE
+
+	videos.PUT("/title", ChangeVideoTitle)
+	videos.PUT("/description", ChangeVideoDescription)
 }

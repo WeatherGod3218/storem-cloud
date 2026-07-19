@@ -1,7 +1,7 @@
 package models
 
 type UserConfig struct {
-	UserId       string `yaml:"userId"`
+	UserID       string `yaml:"userId"`
 	DisplayName  string `yaml:"displayName"`
 	TotalStorage int    `yaml:"totalStorageGB"`
 }

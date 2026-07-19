@@ -8,14 +8,13 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+
 import {Badge} from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
 import { useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
-// type props = {
-//     test: string | null,
-// }
+import { TagFooter } from "./TagFooter"
 
 type ThumbnailCardProps = {
     rowId: string,
@@ -42,8 +41,6 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
     const handleSelect = () => {
         navigate(`/video/${props.rowId}`)
     }
-    
-    console.log(props.thumbnail)
 
     return (
     <Card 
@@ -60,7 +57,7 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
                 <Skeleton className="absolute inset-0 w-full h-full" />
             )}
             <img
-            src={props.thumbnail}
+            src={props.thumbnail || undefined}
             alt="Video Cover"
             onLoad={() => setImageLoaded(true)}
             className={cn(
@@ -71,15 +68,13 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
         <CardHeader>
             <CardTitle className="w-2/3">{props.customTitle ? props.customTitle : props.filename}</CardTitle>
             <CardAction>
-                
             </CardAction>
             <CardDescription>{props.customDescription ? limitString(props.customDescription) : "No description has been given"}</CardDescription>
             <Badge variant="secondary">{props.username}</Badge>
         </CardHeader>
+        <div className="flex-1"/> 
         <CardFooter>
-            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                Tag1
-            </Badge>
+            <TagFooter key={props.rowId} video_id={props.rowId}/>
         </CardFooter>
     </Card>
     )

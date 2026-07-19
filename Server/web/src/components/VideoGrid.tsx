@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ThumbnailCard, ThumbnailSkeletonCard } from "./ThumbnailCard";
+import { ThumbnailCard, ThumbnailSkeletonCard } from "./Thumbnails/ThumbnailCard";
 
 const ENDPOINT = "/api/v2/videos/group";
 
@@ -13,6 +13,9 @@ type Video = {
     thumbnail: string,
     filename: string,
     username: string,
+
+	custom_title?: string,
+	custom_description?: string,
 }
 
 function useVideoGroup() {
@@ -100,7 +103,7 @@ export default function VideoGridInfinite() {
 			</div>
 
 			{error && (
-				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-red-850 px-4 py-3 text-sm text-red-700">
+				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
 					<span>Couldn't load videos: {error}</span>
 					<button
 					onClick={loadMore}
@@ -119,7 +122,7 @@ export default function VideoGridInfinite() {
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				{videos.map((video) => (
-					<ThumbnailCard key={video.row_id} rowId={video.row_id} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+					<ThumbnailCard key={video.row_id} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
 				))}
 				{loading && Array.from({ length: 6 }).map((_, i) => <ThumbnailSkeletonCard key={`sk-${i}`} />)}
 			</div>

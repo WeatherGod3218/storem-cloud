@@ -115,17 +115,21 @@ func main() {
 	api := router.Group("/api")
 	v2.SetRoutes(api)
 
-	router.NoRoute(auth.OAuthMiddleware(), func(c *gin.Context) {
-		reqURL := c.Request.URL.String()
+	if os.Getenv("GIN_MODE") != "release" {
+		router.NoRoute(createViteProxy())
+	} else {
+		router.NoRoute(auth.OAuthMiddleware(), func(c *gin.Context) {
+			reqURL := c.Request.URL.String()
 
-		if strings.Contains(reqURL, "api/") {
-			c.JSON(http.StatusNotFound, models.ErrorResponse{
-				Error: "API not found!",
-			})
-			return
-		}
-		serveFrontend(c, index)
-	})
+			if strings.Contains(reqURL, "api/") {
+				c.JSON(http.StatusNotFound, models.ErrorResponse{
+					Error: "API not found!",
+				})
+				return
+			}
+			serveFrontend(c, index)
+		})
+	}
 
 	router.Run(":8080")
 }

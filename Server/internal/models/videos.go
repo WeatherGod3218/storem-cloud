@@ -40,7 +40,7 @@ type GetVideoGroupRequest struct {
 
 type GetVideoDataResponse struct {
 	RowID string `json:"row_id"`
-	S3Id  string `json:"s3_id"`
+	S3ID  string `json:"s3_id"`
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
@@ -53,7 +53,7 @@ type GetVideoDataResponse struct {
 
 type GetVideoDataDatabase struct {
 	RowID string `json:"row_id"`
-	S3Id  string `json:"s3_id"`
+	S3ID  string `json:"s3_id"`
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
@@ -66,6 +66,20 @@ type GetVideoDataDatabase struct {
 type GetVideoGroupResponse struct {
 	Videos []GetVideoGroupPartResponse `json:"videos"`
 	Cursor *GetVideoGroupCursor        `json:"cursor"`
+}
+
+type GetRandomVideoResponse struct {
+	RowID string `json:"row_id"`
+}
+
+type ChangeVideoTitleRequest struct {
+	RowID string `json:"row_id"`
+	Title string `json:"title"`
+}
+
+type ChangeVideoDescriptionRequest struct {
+	RowID       string `json:"row_id"`
+	Description string `json:"description"`
 }
 
 type AccessVideoResponse struct {

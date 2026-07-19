@@ -1,9 +1,17 @@
+basePath: /api/v2
 definitions:
-  models.AccessVideoResponse:
+  models.ChangeVideoDescriptionRequest:
     properties:
-      url:
+      description:
         type: string
-      video:
+      row_id:
+        type: string
+    type: object
+  models.ChangeVideoTitleRequest:
+    properties:
+      row_id:
+        type: string
+      title:
         type: string
     type: object
   models.ErrorResponse:
@@ -11,162 +19,101 @@ definitions:
       error:
         type: string
     type: object
+  models.GetRandomVideoResponse:
+    properties:
+      row_id:
+        type: string
+    type: object
+  models.GetVideoDataResponse:
+    properties:
+      custom_description:
+        type: string
+      custom_title:
+        type: string
+      filename:
+        type: string
+      row_id:
+        type: string
+      s3_id:
+        type: string
+      timestamp:
+        type: string
+      username:
+        type: string
+      video_url:
+        type: string
+    type: object
+  models.GetVideoGroupCursor:
+    properties:
+      row_id:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  models.GetVideoGroupPartResponse:
+    properties:
+      custom_description:
+        type: string
+      custom_title:
+        type: string
+      filename:
+        type: string
+      row_id:
+        type: string
+      s3_id:
+        type: string
+      thumbnail:
+        type: string
+      timestamp:
+        type: string
+      username:
+        type: string
+    type: object
+  models.GetVideoGroupRequest:
+    properties:
+      row_id:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  models.GetVideoGroupResponse:
+    properties:
+      cursor:
+        $ref: '#/definitions/models.GetVideoGroupCursor'
+      videos:
+        items:
+          $ref: '#/definitions/models.GetVideoGroupPartResponse'
+        type: array
+    type: object
   models.SuccessResponse:
     properties:
       success:
         type: boolean
     type: object
-  models.VideoAbortBackupRequest:
+  models.Tag:
     properties:
-      filename:
+      color:
         type: string
-      row_id:
+      id:
         type: string
-      video_s3_upload_id:
+      name:
         type: string
-    type: object
-  models.VideoCompleteBackupRequest:
-    properties:
-      completed_parts:
-        items:
-          $ref: '#/definitions/models.VideoCompletedPart'
-        type: array
-      filename:
-        type: string
-      row_id:
-        type: string
-      video_s3_upload_id:
-        type: string
-    type: object
-  models.VideoCompletedPart:
-    properties:
-      etag:
-        type: string
-      part_number:
-        type: integer
-    type: object
-  models.VideoStartBackupRequest:
-    properties:
-      filelength:
-        type: number
-      filename:
-        type: string
-      filesize:
-        type: integer
-    type: object
-  models.VideoStartBackupResponse:
-    properties:
-      row_id:
-        type: string
-      thumbnail_s3_url:
-        type: string
-      video_s3_upload_id:
-        type: string
-      video_s3_urls:
-        items:
-          $ref: '#/definitions/models.VideoURLPart'
-        type: array
-    type: object
-  models.VideoURLPart:
-    properties:
-      offset:
-        type: integer
-      part_number:
-        type: integer
-      request_url:
-        type: string
-      size:
-        type: integer
     type: object
 info:
   contact: {}
+  description: API for backing up videos.
+  title: WeatherReels
+  version: "1.0"
 paths:
-  /api/v1/videos/abort:
+  /api/v2/tags/create:
     post:
       consumes:
       - application/json
-      description: Aborts a multipart video upload and marks the failed record
+      description: Gets all of the tags associated with a video
       parameters:
-      - description: Video information
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.VideoAbortBackupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Abort video upload
-      tags:
-      - videos
-  /api/v1/videos/backup:
-    post:
-      consumes:
-      - application/json
-      description: Starts a multipart video upload, creating S3 URLS and marks the
-        record as pending
-      parameters:
-      - description: Video information
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.VideoStartBackupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.VideoStartBackupResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Starts a video upload
-      tags:
-      - videos
-  /api/v1/videos/complete:
-    post:
-      consumes:
-      - application/json
-      description: Completes a multipart video upload and marks the record as completed
-      parameters:
-      - description: Video information
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.VideoCompleteBackupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Completes a Video Upload
-      tags:
-      - videos
-  /api/v1/videos/fetch/{video}:
-    get:
-      description: Generate a presigned URL for a video file
-      parameters:
-      - description: Video filename
+      - description: Video id
         in: path
-        name: video
+        name: request
         required: true
         type: string
       produces:
@@ -175,17 +122,139 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.AccessVideoResponse'
+            items:
+              $ref: '#/definitions/models.Tag'
+            type: array
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get Video's Tags
+      tags:
+      - videos
+      - tags
+  /api/v2/videos/abort:
+    post:
+      consumes:
+      - application/json
+      description: Gets a group of video and thumbnail urls with the given offset.
+        Max of 10
+      parameters:
+      - description: Video information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GetVideoGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetVideoGroupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Gets a group of video/thumbnail urls
+  /api/v2/videos/description:
+    put:
+      consumes:
+      - application/json
+      description: Updates a given videoID's description
+      parameters:
+      - description: New Title
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangeVideoDescriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Updates a videos description
+  /api/v2/videos/fetch/{video}:
+    get:
+      consumes:
+      - application/json
+      description: Generate a presigned URL for a video file
+      parameters:
+      - description: Video information
+        in: path
+        name: request
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
       summary: Get URL for a video
       tags:
       - videos
-  /api/v1/videos/verify:
+  /api/v2/videos/random:
+    get:
+      consumes:
+      - application/json
+      description: Gets all the required data for a random video display page
+      parameters:
+      - description: Video information
+        in: path
+        name: request
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetRandomVideoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get random data for a video
+  /api/v2/videos/title:
+    put:
+      consumes:
+      - application/json
+      description: Updates a given videoID's title
+      parameters:
+      - description: New Title
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangeVideoTitleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Updates a videos title
+  /api/v2/videos/verify:
     put:
       consumes:
       - application/json
@@ -218,4 +287,27 @@ paths:
       summary: Verify uploaded Videos
       tags:
       - videos
+  /api/v2/videos/video:
+    get:
+      consumes:
+      - application/json
+      description: Gets all the required data for a video display page
+      parameters:
+      - description: Video information
+        in: path
+        name: request
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetVideoDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get data for a video
 swagger: "2.0"

@@ -81,6 +81,7 @@ func InitDatabase() error {
 		CREATE TABLE IF NOT EXISTS tags (
 			row_id 		UUID PRIMARY KEY,
 			name 		TEXT NOT NULL UNIQUE,
+			color 		TEXT NOT NULL,
 			created_by	TEXT NOT NULL,
 			created_at 	TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
@@ -94,7 +95,7 @@ func InitDatabase() error {
 			video_id UUID REFERENCES videos(row_id) ON DELETE CASCADE,
 			tag_id UUID REFERENCES tags(row_id) ON DELETE CASCADE,
 			added_by TEXT NOT NULL,
-			added_at TIMESTAMP DEFAULT now(),
+			added_at TIMESTAMPTZ DEFAULT now(),
 			PRIMARY KEY (video_id, tag_id)
 		)
 	`)

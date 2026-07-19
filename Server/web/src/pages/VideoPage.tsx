@@ -2,7 +2,8 @@ import { Header } from "../components/Header"
 
 import { useState, useEffect } from "react"
 import { useParams } from "react-router"
-import { VideoCard, SkeletonVideoCard } from "@/components/VideoCard"
+import { VideoCard, SkeletonVideoCard } from "@/components/Video/VideoCard"
+//import { useMediaQuery } from "@/hooks/MediaQuery";
 
 const ENDPOINT = "/api/v2/videos/video";
 
@@ -20,7 +21,8 @@ type VideoData = {
 
 export const VideoPage = () => {    
     let params = useParams()
-    
+    //const isVertical = useMediaQuery("(max-width: 768px)");
+
     const [isLoading, setLoading] = useState<boolean>(true)
     const [data, setData] = useState<VideoData>({
         row_id: "",
@@ -48,19 +50,12 @@ export const VideoPage = () => {
     console.log(params.id)
 
     return (
-        <div className="w-full">
+        <div className="w-full h-screen flex flex-col">
             <Header/>
-            {!isLoading ? <VideoCard 
-                row_id={data.row_id}
-                s3_id={data.s3_id}
-                
-                custom_title={data?.custom_title}
-                custom_description={data?.custom_description}
-                
-                username={data.username}
-                filename={data.filename}
-                video_url={data.video_url} 
-            /> : <SkeletonVideoCard/>}
+            <div className="flex-1 w-full min-h-0 overflow-hidden">
+                {!isLoading ? <VideoCard {...data}
+                /> : <SkeletonVideoCard/>}
+            </div>
         </div>
     )
 }

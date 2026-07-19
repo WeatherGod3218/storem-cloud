@@ -1,2 +1,8 @@
+web/node_modules
+web/dist
+
 node_modules
-.gitignore
+dist
+
+.git
+*.log

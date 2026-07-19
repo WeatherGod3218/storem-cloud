@@ -9,7 +9,7 @@ var Users map[string]models.UserConfig = make(map[string]models.UserConfig)
 
 func InitUsers(config models.Config) {
 	for _, user := range config.Users {
-		Users[user.UserId] = user
+		Users[user.UserID] = user
 		logging.Logger.Infof("Initalized User %s!", user.DisplayName)
 	}
 }

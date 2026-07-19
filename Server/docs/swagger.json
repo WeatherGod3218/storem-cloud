@@ -1,12 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API for backing up videos.",
+        "title": "WeatherReels",
+        "contact": {},
+        "version": "1.0"
     },
+    "basePath": "/api/v2",
     "paths": {
-        "/api/v1/videos/abort": {
+        "/api/v2/tags/create": {
             "post": {
-                "description": "Aborts a multipart video upload and marks the failed record",
+                "description": "Gets all of the tags associated with a video",
                 "consumes": [
                     "application/json"
                 ],
@@ -14,9 +18,48 @@
                     "application/json"
                 ],
                 "tags": [
-                    "videos"
+                    "videos",
+                    "tags"
                 ],
-                "summary": "Abort video upload",
+                "summary": "Get Video's Tags",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video id",
+                        "name": "request",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/videos/abort": {
+            "post": {
+                "description": "Gets a group of video and thumbnail urls with the given offset. Max of 10",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Gets a group of video/thumbnail urls",
                 "parameters": [
                     {
                         "description": "Video information",
@@ -24,7 +67,44 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.VideoAbortBackupRequest"
+                            "$ref": "#/definitions/models.GetVideoGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetVideoGroupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/videos/description": {
+            "put": {
+                "description": "Updates a given videoID's description",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a videos description",
+                "parameters": [
+                    {
+                        "description": "New Title",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChangeVideoDescriptionRequest"
                         }
                     }
                 ],
@@ -44,89 +124,12 @@
                 }
             }
         },
-        "/api/v1/videos/backup": {
-            "post": {
-                "description": "Starts a multipart video upload, creating S3 URLS and marks the record as pending",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "videos"
-                ],
-                "summary": "Starts a video upload",
-                "parameters": [
-                    {
-                        "description": "Video information",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.VideoStartBackupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.VideoStartBackupResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/videos/complete": {
-            "post": {
-                "description": "Completes a multipart video upload and marks the record as completed",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "videos"
-                ],
-                "summary": "Completes a Video Upload",
-                "parameters": [
-                    {
-                        "description": "Video information",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.VideoCompleteBackupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/videos/fetch/{video}": {
+        "/api/v2/videos/fetch/{video}": {
             "get": {
                 "description": "Generate a presigned URL for a video file",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -137,8 +140,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Video filename",
-                        "name": "video",
+                        "description": "Video information",
+                        "name": "request",
                         "in": "path",
                         "required": true
                     }
@@ -147,22 +150,91 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.AccessVideoResponse"
+                            "$ref": "#/definitions/models.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/api/v1/videos/verify": {
+        "/api/v2/videos/random": {
+            "get": {
+                "description": "Gets all the required data for a random video display page",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get random data for a video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video information",
+                        "name": "request",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetRandomVideoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/videos/title": {
+            "put": {
+                "description": "Updates a given videoID's title",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Updates a videos title",
+                "parameters": [
+                    {
+                        "description": "New Title",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChangeVideoTitleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/videos/verify": {
             "put": {
                 "description": "Verifies videos that are already uploaded, returning a list of ones that are not verified",
                 "consumes": [
@@ -210,16 +282,62 @@
                     }
                 }
             }
+        },
+        "/api/v2/videos/video": {
+            "get": {
+                "description": "Gets all the required data for a video display page",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get data for a video",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Video information",
+                        "name": "request",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetVideoDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "models.AccessVideoResponse": {
+        "models.ChangeVideoDescriptionRequest": {
             "type": "object",
             "properties": {
-                "url": {
+                "description": {
                     "type": "string"
                 },
-                "video": {
+                "row_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ChangeVideoTitleRequest": {
+            "type": "object",
+            "properties": {
+                "row_id": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -232,6 +350,108 @@
                 }
             }
         },
+        "models.GetRandomVideoResponse": {
+            "type": "object",
+            "properties": {
+                "row_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetVideoDataResponse": {
+            "type": "object",
+            "properties": {
+                "custom_description": {
+                    "type": "string"
+                },
+                "custom_title": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "row_id": {
+                    "type": "string"
+                },
+                "s3_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "video_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetVideoGroupCursor": {
+            "type": "object",
+            "properties": {
+                "row_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetVideoGroupPartResponse": {
+            "type": "object",
+            "properties": {
+                "custom_description": {
+                    "type": "string"
+                },
+                "custom_title": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "row_id": {
+                    "type": "string"
+                },
+                "s3_id": {
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetVideoGroupRequest": {
+            "type": "object",
+            "properties": {
+                "row_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetVideoGroupResponse": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "$ref": "#/definitions/models.GetVideoGroupCursor"
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GetVideoGroupPartResponse"
+                    }
+                }
+            }
+        },
         "models.SuccessResponse": {
             "type": "object",
             "properties": {
@@ -240,99 +460,17 @@
                 }
             }
         },
-        "models.VideoAbortBackupRequest": {
+        "models.Tag": {
             "type": "object",
             "properties": {
-                "filename": {
+                "color": {
                     "type": "string"
                 },
-                "row_id": {
+                "id": {
                     "type": "string"
                 },
-                "video_s3_upload_id": {
+                "name": {
                     "type": "string"
-                }
-            }
-        },
-        "models.VideoCompleteBackupRequest": {
-            "type": "object",
-            "properties": {
-                "completed_parts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.VideoCompletedPart"
-                    }
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "row_id": {
-                    "type": "string"
-                },
-                "video_s3_upload_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.VideoCompletedPart": {
-            "type": "object",
-            "properties": {
-                "etag": {
-                    "type": "string"
-                },
-                "part_number": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.VideoStartBackupRequest": {
-            "type": "object",
-            "properties": {
-                "filelength": {
-                    "type": "number"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "filesize": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.VideoStartBackupResponse": {
-            "type": "object",
-            "properties": {
-                "row_id": {
-                    "type": "string"
-                },
-                "thumbnail_s3_url": {
-                    "type": "string"
-                },
-                "video_s3_upload_id": {
-                    "type": "string"
-                },
-                "video_s3_urls": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.VideoURLPart"
-                    }
-                }
-            }
-        },
-        "models.VideoURLPart": {
-            "type": "object",
-            "properties": {
-                "offset": {
-                    "type": "integer"
-                },
-                "part_number": {
-                    "type": "integer"
-                },
-                "request_url": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "integer"
                 }
             }
         }
