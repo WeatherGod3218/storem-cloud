@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -114,6 +115,10 @@ func UploadVideo(config models.Config, fileName string, baseDir string) error {
 	defer func() {
 		<-sem
 	}()
+
+	if !config.IncludeDirectoryPath {
+		fileName = filepath.Join(baseDir, fileName)
+	}
 
 	file, err := os.Open(fileName)
 	if err != nil {

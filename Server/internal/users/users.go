@@ -28,7 +28,6 @@ func InitUsers(config models.Config) {
 
 		UsersById[user.UserID] = user
 		for _, email := range user.Emails {
-			logging.Logger.Info(email)
 			UsersByEmail[email] = user
 		}
 		logging.Logger.Infof("Initalized User %s!", user.DisplayName)

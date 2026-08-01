@@ -44,7 +44,7 @@ func ScanDirectory(config models.Config, baseDir string, wg *sync.WaitGroup, pat
 			go func() {
 				defer wg.Done()
 
-				verify.AddFileToVerifyList(filepath.Join(path, item.Name()), baseDir)
+				verify.AddFileToVerifyList(config, filepath.Join(path, item.Name()), baseDir)
 			}()
 		}
 	}

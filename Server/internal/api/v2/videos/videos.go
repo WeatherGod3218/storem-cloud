@@ -149,7 +149,6 @@ func GetVideoGroup(c *gin.Context) {
 		resp.Cursor = &models.GetVideoGroupCursor{Timestamp: last.Timestamp, RowID: last.RowID}
 	}
 
-	logging.Logger.Info(resp)
 	c.JSON(http.StatusOK, resp)
 }
 

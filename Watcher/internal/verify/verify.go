@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"net/http"
 	"os"
-	"slices"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
@@ -21,18 +21,43 @@ var mutex sync.Mutex = sync.Mutex{}
 
 const MINIMUM_VIDEO_LENGTH = 5
 
-func AddFileToVerifyList(file string, baseDir string) {
+func AddFileToVerifyList(config models.Config, file string, baseDir string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
+	if !config.IncludeDirectoryPath {
+		file = strings.TrimPrefix(file, baseDir)
+	}
 	filesToVerify[file] = baseDir
+
+}
+
+func GetAllFilesToVerify(config models.Config) []string {
+	retList := make([]string, len(filesToVerify))
+	index := 0
+	for file, baseDir := range filesToVerify {
+		if !config.IncludeDirectoryPath {
+			retList[index] = strings.TrimPrefix(file, baseDir)
+		}
+		retList[index] = strings.TrimPrefix(retList[index], string(filepath.Separator))
+		index++
+	}
+	return retList
+}
+
+func GetBaseDirFromFile(file string) string {
+	file = strings.TrimPrefix(file, string(filepath.Separator)) //incase it has a leading slash
+	file = fmt.Sprintf("%s%s", string(filepath.Separator), file)
+	return filesToVerify[file]
 }
 
 func ValidateFilesForBackup(credentials models.Credentials, config models.Config) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	jsonBytes, err := json.Marshal(slices.Collect(maps.Keys(filesToVerify)))
+	fileList := GetAllFilesToVerify(config)
+
+	jsonBytes, err := json.Marshal(fileList)
 	if err != nil {
 		return err
 	}
@@ -66,11 +91,11 @@ func ValidateFilesForBackup(credentials models.Credentials, config models.Config
 	wg.SetLimit(upload.MAX_VIDEO_UPLOADS)
 
 	if len(notBacked) > 0 {
-		logging.Logger.Infof("Found %d files to upload", len(notBacked))
+		logging.Logger.Infof("Found %d files to upload, against %d total files. %d backed", len(notBacked), len(fileList), (len(fileList) - len(notBacked)))
 
 		for _, file := range notBacked {
 			wg.Go(func() error {
-				return upload.UploadVideo(config, file, filesToVerify[file])
+				return upload.UploadVideo(config, file, GetBaseDirFromFile(file))
 			})
 		}
 

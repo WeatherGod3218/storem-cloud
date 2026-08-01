@@ -33,6 +33,7 @@ WORKDIR /app
 COPY --from=gobuilder /app/server .
 
 EXPOSE 8080
+ENV DEV_MODE="false"
 
 CMD ["./server"]
 
