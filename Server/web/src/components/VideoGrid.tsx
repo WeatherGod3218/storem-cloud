@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	useMutation,
+} from '@tanstack/react-query'
+
+import { Button } from "@/components/ui/button"
+import { ArrowUpAZ, ArrowUpZA } from "lucide-react"
+
 import { ThumbnailCard, ThumbnailSkeletonCard } from "./Thumbnails/ThumbnailCard";
+import { useAuth } from "@/context/AuthContext";
+
 
 const ENDPOINT = "/api/v2/videos/group";
 
@@ -16,56 +25,92 @@ type Video = {
 
 	custom_title?: string,
 	custom_description?: string,
+
+	timestamp: string,
+}
+
+type VideoData = {
+	videos: Video[]; 
+	cursor: Cursor | null
+}
+
+type VideoFetch = {
+	row_id?: string, 
+	timestamp?: string,
+	order_ascending: boolean
 }
 
 function useVideoGroup() {
+	const { session, authLoading} = useAuth()
     const [videos, setVideos] = useState<Video[]>([]);
-    const [cursor, setCursor] = useState<Cursor | null>(null); // null = first page
+    const [cursor, setCursor] = useState<Cursor | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
+	const [newestFirst, setNewestFirst] = useState(true)
     const [error, setError] = useState<string | null>(null);
     const hasLoadedOnce = useRef(false);
 
+
+	const getVideos = useMutation<VideoData, Error, VideoFetch>({
+		mutationKey: [`get-video-grid-list`],
+		mutationFn: (payload: any) =>
+		fetch(`${ENDPOINT}`, {
+			method: "POST",
+			body: JSON.stringify(payload),
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": `Bearer ${session?.access_token}`
+			},
+		}).then((res) => {
+			if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
+			return res.json()
+		}),
+
+		onError: (err) => {
+			setError(err instanceof Error ? err.message : "Something went wrong");
+			setHasMore(false);			
+		},
+		onSuccess: (data) => {
+			setVideos((prev) => [...prev, ...(data.videos ?? [])]);
+			setCursor(data.cursor ?? null);
+			setHasMore(Boolean(data.cursor));			
+		},
+		onSettled: () => {
+			setLoading(false);
+		}
+	})
+
+	function resetVideos() {
+		setCursor(null)
+		setHasMore(true)
+		setVideos([])
+	}
+
   	const loadMore = useCallback(async () => {
-		if (loading || !hasMore) return;
+		if (loading || authLoading || !hasMore) return;
 		setLoading(true);
 		setError(null);
 
-		const payload = {"row_id": cursor?.row_id, "timestamp":cursor?.timestamp}
-		try {
-			const res = await fetch(`${ENDPOINT}`, {
-				method: "POST",
-				headers:{
-					"Content-Type": `application/json`
-				},
-				body: JSON.stringify(payload)
-			});
-			if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-			const data: {videos: Video[]; cursor: Cursor | null} = await res.json();
-
-			setVideos((prev) => [...prev, ...(data.videos ?? [])]);
-			setCursor(data.cursor ?? null);
-			setHasMore(Boolean(data.cursor));
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Something went wrong");
-			setHasMore(false);
-		} finally {
-			setLoading(false);
+		const payload = {
+			"row_id": cursor?.row_id, 
+			"timestamp": cursor?.timestamp,
+			"order_ascending": !newestFirst, //oops
 		}
-	}, [cursor, hasMore, loading]);
+
+		getVideos.mutate(payload)
+	}, [cursor, hasMore, loading, authLoading]);
 
 	useEffect(() => {
 		if (hasLoadedOnce.current) return;
 		hasLoadedOnce.current = true;
 		loadMore();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-  	return { videos, loadMore, hasMore, loading, error };
+  	return { videos, newestFirst, setNewestFirst, loadMore, hasMore, loading, error, resetVideos};
 }
 
 export default function VideoGridInfinite() {
-    const { videos, loadMore, hasMore, loading, error } = useVideoGroup();
+    const { videos, loadMore, hasMore, loading, newestFirst, setNewestFirst, error, resetVideos } = useVideoGroup();
     const [isIntersecting, setIsIntersecting] = useState(false);
 
     const sentinelRef = useRef(null);
@@ -94,12 +139,21 @@ export default function VideoGridInfinite() {
         return () => observer.disconnect();
     }, []);
 
-  return (
+
+	function changeAscensionOrder() {
+		setNewestFirst(!newestFirst)		
+		resetVideos()
+	}
+
+  	return (
     <div className="min-h-screen bg-dark p-8">
     	<div className="max-w-5xl mx-auto">
 			<div className="mb-6">
 				<h1 className="text-xl font-semibold text-slate-200">Videos</h1>
-				<p className="text-sm text-slate-500">Newest first</p>
+				<div className="flex flex-row items-center">					
+					<Button variant="outline" size="icon-sm" aria-label="Confirm Title" onClick={changeAscensionOrder}>{ newestFirst ? <ArrowUpAZ/> : <ArrowUpZA/>}</Button>
+					<p className="pl-1 text-l text-slate-500">{ newestFirst ? "Newest First" : "Oldest First"}</p>
+				</div>
 			</div>
 
 			{error && (

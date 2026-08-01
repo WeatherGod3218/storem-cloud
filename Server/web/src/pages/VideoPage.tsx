@@ -17,6 +17,8 @@ type VideoData = {
     username: string,
     filename: string,
     video_url: string,
+
+    timestamp: number,
 }
 
 export const VideoPage = () => {    
@@ -32,6 +34,7 @@ export const VideoPage = () => {
         username: "",
         filename: "",
         video_url: "",
+        timestamp: 0,
     })
 
 

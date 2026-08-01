@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	"math/rand/v2"
 	"net/http"
 	"os"
 	"slices"
@@ -14,6 +13,7 @@ import (
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
+	"golang.org/x/sync/errgroup"
 )
 
 var filesToVerify map[string]string = make(map[string]string)
@@ -62,13 +62,23 @@ func ValidateFilesForBackup(credentials models.Credentials, config models.Config
 		return err
 	}
 
+	var wg errgroup.Group
+	wg.SetLimit(upload.MAX_VIDEO_UPLOADS)
+
 	if len(notBacked) > 0 {
-		randNum := rand.IntN(len(notBacked))
-		fileToBack := notBacked[randNum]
-		err := upload.UploadVideo(config, fileToBack, filesToVerify[fileToBack])
-		if err != nil {
-			logging.Logger.Info(fmt.Sprintf("Failure in backup: %s", err))
+		logging.Logger.Infof("Found %d files to upload", len(notBacked))
+
+		for _, file := range notBacked {
+			wg.Go(func() error {
+				return upload.UploadVideo(config, file, filesToVerify[file])
+			})
 		}
+
+		if err := wg.Wait(); err != nil {
+			return err
+		}
+	} else {
+		logging.Logger.Info("No files to upload!")
 	}
 	return nil
 }

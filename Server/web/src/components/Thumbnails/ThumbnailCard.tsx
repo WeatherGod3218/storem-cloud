@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router"
 
 import {
     Card,
@@ -12,7 +13,6 @@ import {
 import {Badge} from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
 import { TagFooter } from "./TagFooter"
 
@@ -66,7 +66,7 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
             )}
             />
         <CardHeader>
-            <CardTitle className="w-2/3">{props.customTitle ? props.customTitle : props.filename}</CardTitle>
+            <CardTitle className="w-full min-w-0 line-clamp-2 break-words">{props.customTitle ? props.customTitle : props.filename}</CardTitle>
             <CardAction>
             </CardAction>
             <CardDescription>{props.customDescription ? limitString(props.customDescription) : "No description has been given"}</CardDescription>

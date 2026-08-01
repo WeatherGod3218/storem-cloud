@@ -84,8 +84,30 @@ func CreatePermanentVideoURL(uploadId string) (string, error) {
 	return fileUrl, nil
 }
 
+func DeleteVideo(uploadId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	bucket := bucketName
+	if bucket == "" {
+		return fmt.Errorf("bucket environment variable is not set")
+	}
+
+	key := uploadId
+
+	_, err := S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create presigned url")
+	}
+
+	return nil
+}
+
 func CreateGetPresignedVideoURL(uploadId string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	presign := s3.NewPresignClient(S3Client)

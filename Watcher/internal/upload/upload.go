@@ -18,8 +18,11 @@ import (
 )
 
 const MINIMUM_VIDEO_LENGTH = 5
+const MAX_VIDEO_UPLOADS = 8
 
 var client *tusgo.Client
+
+var sem chan struct{} = make(chan struct{}, MAX_VIDEO_UPLOADS)
 
 func getMP4Length(fileName string) (float64, error) {
 	file, err := mp4.Open(fileName)
@@ -107,6 +110,11 @@ func InitTusio(creds models.Credentials) {
 }
 
 func UploadVideo(config models.Config, fileName string, baseDir string) error {
+	sem <- struct{}{}
+	defer func() {
+		<-sem
+	}()
+
 	file, err := os.Open(fileName)
 	if err != nil {
 		return err

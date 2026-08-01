@@ -4,9 +4,14 @@ import { Input } from "@/components/ui/input"
 import { Field } from "@/components/ui/field"
 
 import {
+  useMutation
+} from '@tanstack/react-query'
+
+import {
   CardTitle,
 } from "@/components/ui/card"
 import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
 
 type VideoDataProps = {
     title: string | null,
@@ -24,38 +29,51 @@ function limitStringLength(input: string) {
 }
 
 export const VideoTitleDisplay = (props: VideoDataProps) => {
+    const { authLoading} = useAuth()
     const [isUpdating, setUpdating] = useState(false)
     const [title, setTitle] = useState(props.title ? limitStringLength(props.title) : limitStringLength(props.filename))
     
+    const updateTitleRequest = useMutation<null, Error, {row_id: string, title: string}>({
+		mutationKey: [`update-video-title`, props.id],
+		mutationFn: (payload: any) =>
+        fetch(`${ENDPOINT}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).then((res) => {
+            if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
+            return res.json()
+        }),
+		onError: (err) => {
+			console.log(err)			
+		},
+		onSettled: () => {
+			setUpdating(false)
+		}
+	})
     function startUpdating() {
         setUpdating(true)
     }
 
     function stopUpdating() {
-        let cancelled = false
+        if (!title || title.length == 0){
+            setTitle(limitStringLength(props.filename))
+            return
+        }
+
+        if (authLoading) {
+            return //TODO: Send Error Popup
+        }
         const body = {
             row_id: props.id,
             title: title
         }
-
-        fetch(`${ENDPOINT}`, {
-            method: "PUT",
-            body: JSON.stringify(body),
-            headers: {
-                "Content-Type": "application/json",
-            },
-        })
-        .then(res => {if (!res.ok) {throw new Error(`HTTP ERROR: ${res.status}`)} return res.json()})
-        .catch(err => { if (!cancelled) {console.log(`${err}`)}})
-        .finally(() => { if (!cancelled) setUpdating(false); })
-        return () => { cancelled = true; };
+        updateTitleRequest.mutate(body)
     }
 
     function updateTitle(newTitle: string) {
-        if (!newTitle){
-            setTitle(limitStringLength(props.filename))
-            return
-        }
         setTitle(limitStringLength(newTitle))
     }
 

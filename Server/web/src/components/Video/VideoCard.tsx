@@ -15,6 +15,7 @@ import { useMediaQuery } from "@/hooks/MediaQuery"
 
 import { memo } from "react"
 import { TagDisplay } from "./TagDisplay"
+import { VideoScrollBar } from "./ScrollBar/VideoScrollBar"
  
 type VideoData = {
     row_id: string,
@@ -26,6 +27,8 @@ type VideoData = {
     username: string,
     filename: string,
     video_url: string,
+
+    timestamp: number,
 }
 
 // const DESCRIPTION_MAX_CHAR = 300
@@ -40,15 +43,12 @@ const VideoPlayer = memo(({ src }: { src: string }) => (
         className="w-full h-full rounded-md object-cover"
         src={src}
         controls
+        autoPlay
         preload="metadata"
     > 
         Your browser does not support the video tag.
     </video>
 ));
-
-const videos = Array.from({ length: 50 }).map(
-  (_, i, __) => `video number ${i}`
-)
 
 export const VideoCard = (props: VideoData) => {
     const isVertical = useMediaQuery("(max-width: 903px)")
@@ -75,21 +75,19 @@ export const VideoCard = (props: VideoData) => {
                 {isVertical ? ( 
                     <div className="w-full h-full min-h-0 px-2 mt-2">
                         <ScrollArea className="h-full w-full min-h-0 rounded-md border">
-                            <div className="p-4">
-                                {videos.map((vidname) => (
-                                    <h4 key={vidname} className="mb-4 text-sm leading-none font-medium">{vidname}</h4>   
-                                ))}
-                            </div>
+                            <VideoScrollBar key={props.row_id} cursor={{
+                                "row_id": props.row_id, 
+                                "timestamp":props.timestamp
+                            }}/>
                         </ScrollArea>
                     </div>
                 ) : (
                     <div className="w-1/4 mr-3 h-full">
                         <ScrollArea className="h-full w-full min-h-0 rounded-md border">
-                            <div className="p-4">
-                                {videos.map((vidname) => (
-                                    <h4 key={vidname} className="mb-4 text-sm leading-none font-medium">{vidname}</h4>   
-                                ))}
-                            </div>
+                            <VideoScrollBar key={props.row_id} cursor={{
+                                "row_id": props.row_id, 
+                                "timestamp":props.timestamp
+                            }}/>
                         </ScrollArea>
                     </div>
                 )}

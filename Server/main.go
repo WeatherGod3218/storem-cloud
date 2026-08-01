@@ -115,7 +115,7 @@ func main() {
 	api := router.Group("/api")
 	v2.SetRoutes(api)
 
-	if os.Getenv("GIN_MODE") != "release" {
+	if os.Getenv("DEV_MODE") == "true" {
 		router.NoRoute(createViteProxy())
 	} else {
 		router.NoRoute(auth.OAuthMiddleware(), func(c *gin.Context) {

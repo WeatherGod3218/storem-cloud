@@ -6,6 +6,7 @@ import (
 	"github.com/WeatherGod3218/weather-reels-server/internal/database"
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
+	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 	"github.com/gin-gonic/gin"
 )
 
@@ -88,6 +89,8 @@ func GetAllTags(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/get/{id} [get]
 func GetVideoTags(c *gin.Context) {
+	_ = users.GetUserByToken(c.Get("User"))
+
 	id := c.Param("id")
 
 	if id == "" {
@@ -109,7 +112,7 @@ func GetVideoTags(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-// GetVideoTags godoc
+// AddVideoTag godoc
 //
 // @Summary      Get Video's Tags
 // @Description  Gets all of the tags associated with a video

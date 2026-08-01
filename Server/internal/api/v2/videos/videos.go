@@ -94,6 +94,8 @@ func AccessVideo(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/abort [post]
 func GetVideoGroup(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+
 	var req *models.GetVideoGroupRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -104,9 +106,9 @@ func GetVideoGroup(c *gin.Context) {
 		return
 	}
 
-	videoEntries, hasMore, err := database.GetVideoGroup(req.Timestamp, req.RowID)
+	videoEntries, hasMore, err := database.GetVideoGroup(req, user)
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoGroup"}).Warning("failed to bind JSON")
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoGroup"}).Warning("failed to get videos from database")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request!",
 		})
@@ -147,6 +149,7 @@ func GetVideoGroup(c *gin.Context) {
 		resp.Cursor = &models.GetVideoGroupCursor{Timestamp: last.Timestamp, RowID: last.RowID}
 	}
 
+	logging.Logger.Info(resp)
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -245,7 +248,7 @@ func GetRandomVideo(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetVideoGroup godoc
+// GetVideoData godoc
 //
 // @Summary      Get data for a video
 // @Description  Gets all the required data for a video display page
@@ -296,6 +299,8 @@ func GetVideoData(c *gin.Context) {
 		Username: users.GetUsername(data.UserId),
 		Filename: data.Filename,
 		VideoURL: videoURL,
+
+		Timestamp: data.Timestamp,
 	}
 
 	c.JSON(http.StatusOK, resp)

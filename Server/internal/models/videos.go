@@ -9,10 +9,10 @@ type GetVideoGroupPart struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
-	UserId       string    `json:"user_id"`
-	Timestamp    time.Time `json:"timestamp"`
-	ThumbnailURL string    `json:"thumbnail"`
-	Filename     string    `json:"filename"`
+	UserId       string `json:"user_id"`
+	Timestamp    int64  `json:"timestamp"`
+	ThumbnailURL string `json:"thumbnail"`
+	Filename     string `json:"filename"`
 }
 
 type GetVideoGroupPartResponse struct {
@@ -22,20 +22,21 @@ type GetVideoGroupPartResponse struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
-	Username     string    `json:"username"`
-	Filename     string    `json:"filename"`
-	ThumbnailURL string    `json:"thumbnail"`
-	Timestamp    time.Time `json:"timestamp"`
+	Username     string `json:"username"`
+	Filename     string `json:"filename"`
+	ThumbnailURL string `json:"thumbnail"`
+	Timestamp    int64  `json:"timestamp"`
 }
 
 type GetVideoGroupCursor struct {
-	Timestamp time.Time `json:"timestamp"`
-	RowID     string    `json:"row_id"`
+	Timestamp int64  `json:"timestamp"`
+	RowID     string `json:"row_id"`
 }
 
 type GetVideoGroupRequest struct {
-	Timestamp *time.Time `json:"timestamp"`
-	RowID     string     `json:"row_id"`
+	Timestamp      *int64  `json:"timestamp"`
+	RowID          *string `json:"row_id"`
+	OrderAscending bool    `json:"order_ascending"`
 }
 
 type GetVideoDataResponse struct {
@@ -45,10 +46,10 @@ type GetVideoDataResponse struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
-	Username  string    `json:"username"`
-	Filename  string    `json:"filename"`
-	VideoURL  string    `json:"video_url"`
-	Timestamp time.Time `json:"timestamp"`
+	Username  string `json:"username"`
+	Filename  string `json:"filename"`
+	VideoURL  string `json:"video_url"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type GetVideoDataDatabase struct {
@@ -58,9 +59,9 @@ type GetVideoDataDatabase struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
-	UserId    string    `json:"user_id"`
-	Filename  string    `json:"filename"`
-	Timestamp time.Time `json:"timestamp"`
+	UserId    string `json:"user_id"`
+	Filename  string `json:"filename"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type GetVideoGroupResponse struct {

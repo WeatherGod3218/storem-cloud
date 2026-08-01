@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/jackc/pgx/v5"
+	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 )
 
 const MAX_ROW_AMOUNT int = 3
@@ -65,35 +66,46 @@ func VerifyVideoList(videos []string) ([]string, error) {
 	return missing, nil
 }
 
-func GetVideoGroup(offset *time.Time, rowID string) ([]models.GetVideoGroupPart, bool, error) {
+func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]models.GetVideoGroupPart, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	var (
-		rows pgx.Rows
-		err  error
-	)
-	if offset == nil {
-		rows, err = db.Query(ctx, `
-			SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
-			WHERE status = 'Complete'
-			ORDER BY file_mod_date DESC, row_id DESC
-			LIMIT $1 
-		`, (MAX_ROW_AMOUNT*3)+1)
-	} else {
-		rows, err = db.Query(ctx, `
-			SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
-			WHERE status = 'Complete'
-			AND (file_mod_date, row_id) < ($1, $2)
-			ORDER BY file_mod_date DESC, row_id DESC
-			LIMIT $3 
-		`, offset, rowID, (MAX_ROW_AMOUNT*3)+1)
-	}
-	defer rows.Close()
+	args := make([]any, 0)
 
+	baseQuery := `
+		SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos WHERE status = 'Complete'
+	`
+
+	if user == nil {
+		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
+	}
+
+	cmp := "<"
+	if options.OrderAscending {
+		cmp = ">"
+	}
+
+	if options.Timestamp != nil && options.RowID != nil {
+		args = append(args, time.Unix(*options.Timestamp, 0))
+		args = append(args, options.RowID)
+		baseQuery = fmt.Sprintf("%s AND (file_mod_date, row_id) %s ($%d, $%d)", baseQuery, cmp, len(args)-1, len(args))
+	}
+
+	if options.OrderAscending == true {
+		baseQuery = fmt.Sprintf("%s ORDER BY file_mod_date ASC, row_id ASC", baseQuery)
+	} else {
+		baseQuery = fmt.Sprintf("%s ORDER BY file_mod_date DESC, row_id DESC", baseQuery)
+	}
+
+	//add limit
+	args = append(args, (MAX_ROW_AMOUNT*3)+1)
+	baseQuery = fmt.Sprintf("%s LIMIT $%d", baseQuery, len(args))
+
+	rows, err := db.Query(ctx, baseQuery, args...)
 	if err != nil {
 		return nil, false, err
 	}
+	defer rows.Close()
 
 	videos := make([]models.GetVideoGroupPart, 0)
 	for rows.Next() {
@@ -118,8 +130,11 @@ func GetVideoGroup(offset *time.Time, rowID string) ([]models.GetVideoGroupPart,
 			CustomDescription: customDesc,
 			UserId:            userId,
 			Filename:          filename,
-			Timestamp:         timestamp,
+			Timestamp:         timestamp.Unix(),
 		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, false, err
 	}
 
 	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
@@ -207,7 +222,7 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 		CustomDescription: customDesc,
 		UserId:            userId,
 		Filename:          filename,
-		Timestamp:         timestamp,
+		Timestamp:         timestamp.Unix(),
 	}
 
 	return data, nil
