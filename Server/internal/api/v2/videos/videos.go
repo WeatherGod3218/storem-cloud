@@ -231,7 +231,9 @@ func ChangeVideoDescription(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/random [get]
 func GetRandomVideo(c *gin.Context) {
-	rowId, err := database.GetRandomVideoData()
+	user := users.GetUserByToken(c.Get("User"))
+
+	rowId, err := database.GetRandomVideoData(user)
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
