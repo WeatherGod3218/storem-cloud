@@ -149,7 +149,7 @@ func GetRandomVideoData(user *users.User) (string, error) {
 	defer cancel()
 
 	baseQuery := `
-		SELECT row_id FROM videos
+		SELECT row_id FROM videos WHERE status = 'Complete'
 	`
 	if user == nil {
 		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
