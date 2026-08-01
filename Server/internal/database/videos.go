@@ -144,20 +144,23 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 	return videos, hasMore, nil
 }
 
-func GetRandomVideoData() (string, error) {
+func GetRandomVideoData(user *users.User) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
+	baseQuery := `
+		SELECT row_id FROM videos
+	`
+	if user == nil {
+		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
+	}
+
+	baseQuery = fmt.Sprintf("%s ORDER BY RANDOM() LIMIT 1", baseQuery)
 	var (
 		rowId string
 	)
 
-	if err := db.QueryRow(ctx, `
-		SELECT row_id FROM videos
-		WHERE status = 'Complete'
-		ORDER BY RANDOM()
-		LIMIT 1
-	`).Scan(&rowId); err != nil {
+	if err := db.QueryRow(ctx, baseQuery).Scan(&rowId); err != nil {
 		return "", err
 	}
 
