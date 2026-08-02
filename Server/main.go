@@ -136,6 +136,7 @@ func main() {
 	v2.SetRoutes(api)
 
 	if os.Getenv("DEV_MODE") == "true" {
+		logging.Logger.Info("RUNNING IN DEV MODE!")
 		router.NoRoute(createViteProxy())
 	} else {
 		router.NoRoute(auth.OAuthMiddleware(), func(c *gin.Context) {

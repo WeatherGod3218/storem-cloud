@@ -1,13 +1,13 @@
 import {
   Menubar,
-//   MenubarContent,
-//   MenubarGroup,
-//   MenubarItem,
   MenubarMenu,
-//   MenubarSeparator,
-//   MenubarShortcut,
   MenubarTrigger,
 } from "@/components/ui/menubar"
+
+import {
+	useMutation,
+} from '@tanstack/react-query'
+
 import { useAuth } from "@/context/AuthContext";
 import { House, Dices, User } from "lucide-react"
 import { useNavigate } from "react-router"
@@ -15,7 +15,7 @@ import { useNavigate } from "react-router"
 const ENDPOINT = "/api/v2/videos/random";
 
 export const Header = () => {
-    const { user, authLoading } = useAuth()
+    const { user, session, authLoading } = useAuth()
     const navigate = useNavigate()
 
     const goHome = () => {
@@ -25,16 +25,29 @@ export const Header = () => {
     const goToLogin = () => {
         navigate("/login")
     }
+    //TE
+    const getRandomVideo = useMutation<any, Error, null>({
+		mutationKey: [`get-random-video`],
+		mutationFn: () =>
+		fetch(`${ENDPOINT}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": `Bearer ${session?.access_token}`
+			},
+		}).then((res) => {
+			if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
+			return res.json()
+		}),
+
+		onSuccess: (data) => {
+			navigate(`/video/${data.row_id}`)			
+		},
+
+	})
 
     const goToRandomVideo = () => {
-        let cancelled = false;
-
-        fetch(`${ENDPOINT}`)
-        .then(res => {if (!res.ok) {throw new Error(`HTTP ERROR: ${res.status}`)} return res.json()})
-        .then(data => { if (!cancelled)  navigate(`/video/${data.row_id}`); })        
-        .catch(err => { if (!cancelled) {console.log(`${err}`)}})
-        .finally(() => { if (!cancelled) cancelled = true; })
-        return () => { cancelled = true; };
+        getRandomVideo.mutate(null)
     }
 
     return (

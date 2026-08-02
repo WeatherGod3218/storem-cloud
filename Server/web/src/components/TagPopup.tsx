@@ -139,7 +139,7 @@ export const TagPopup = (props: TagProps) => {
                     {data?.map((tag: Tag) => (
                         <Fragment key={tag.tag_id}>
                         {!has(tag) && (
-                            <CommandItem value={tag.tag_id} onSelect={() => {
+                            <CommandItem value={tag.name} onSelect={() => {
                                 props.onSelect(tag)
                             }
                             }>

@@ -1,14 +1,41 @@
 services:
-  weather-reels-watcher:
-    build: ./Watcher/
-    env_file:
-      - ./Watcher/.env
+  redis:
+    image: redis:7
+    container_name: storem-cloud-redis
+    ports:
+      - "6379:6379"
     networks:
-      - weather-reels
+      - storem-cloud
 
+  storem-cloud-server:
+    build: ./Server/
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./Server/.env
+    networks:
+      - storem-cloud
     volumes:
       - type: bind
-        source: E:\AssetFolder\BackUp\Video Files\MedalFiles\Clips
+        source: ./Server/config.yaml
+        target: /app/config.yaml
+        read_only: true
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  storem-cloud-watcher:
+    build: ./Watcher/
+    networks:
+      - storem-cloud
+    volumes:
+      - type: bind
+        source: "E:/AssetFolder/BackUp/Video Files/MedalFiles/Clips"
         target: /clips
       - type: bind
         source: ./Watcher/config.yaml
@@ -18,22 +45,11 @@ services:
         source: ./Watcher/credentials.yaml
         target: /app/credentials.yaml
         read_only: true
-        
-        
-  weather-reels-server:
-    build: ./Server/
-    ports:
-      - "8080:8080"
-    env_file:
-      - ./Server/.env
-    networks:
-      - weather-reels
-    volumes:
-      - type: bind
-        source: ./Server/config.yaml
-        target: /app/config.yaml
-        read_only: true
-
+    depends_on:
+      storem-cloud-server:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 networks:
-  weather-reels:
+  storem-cloud:

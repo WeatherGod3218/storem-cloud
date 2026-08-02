@@ -78,6 +78,7 @@ func AccessVideo(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, models.AccessVideoResponse{
 		URL:   url,
 		Video: video,
@@ -130,7 +131,6 @@ func GetVideoGroup(c *gin.Context) {
 				})
 				return
 			}
-			return
 		}
 
 		username := users.GetUsername(video.UserId)
@@ -298,7 +298,6 @@ func GetVideoData(c *gin.Context) {
 			})
 			return
 		}
-		return
 	}
 
 	logging.Logger.Info(videoURL)

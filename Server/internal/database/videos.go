@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
 	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 )
@@ -76,7 +77,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 		SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos WHERE status = 'Complete'
 	`
 
-	if user == nil {
+	if user == nil || !user.CanViewPrivateVideos() {
 		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
 	}
 
@@ -139,6 +140,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
 	if hasMore {
+		logging.Logger.Info("does not have more!")
 		videos = videos[:(MAX_ROW_AMOUNT * 3)]
 	}
 	return videos, hasMore, nil
@@ -151,7 +153,7 @@ func GetRandomVideoData(user *users.User) (string, error) {
 	baseQuery := `
 		SELECT row_id FROM videos WHERE status = 'Complete'
 	`
-	if user == nil {
+	if user == nil || !user.CanViewPrivateVideos() {
 		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
 	}
 

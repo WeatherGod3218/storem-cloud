@@ -89,3 +89,12 @@ func (user *User) CanModifyVideoData() bool {
 		return false
 	}
 }
+
+func (user *User) CanViewPrivateVideos() bool {
+	switch user.Role {
+	case "owner", "admin":
+		return true
+	default:
+		return false
+	}
+}

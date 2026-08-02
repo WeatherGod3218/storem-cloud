@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
 	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -62,7 +62,7 @@ func ValidateFilesForBackup(credentials models.Credentials, config models.Config
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v2/videos/verify", os.Getenv("SERVER_URL")), bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v2/videos/verify", credentials.ServerURL), bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,11 @@ func ValidateFilesForBackup(credentials models.Credentials, config models.Config
 
 		for _, file := range notBacked {
 			wg.Go(func() error {
-				return upload.UploadVideo(config, file, GetBaseDirFromFile(file))
+				err := upload.UploadVideo(config, file, GetBaseDirFromFile(file))
+				if err != nil {
+					logging.Logger.WithFields(logrus.Fields{"module": "verify", "method": "ValidateFilesForBackup", "error": err}).Warn("Failure backing up video!")
+				}
+				return err
 			})
 		}
 

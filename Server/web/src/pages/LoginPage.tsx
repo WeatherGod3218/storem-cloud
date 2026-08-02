@@ -32,7 +32,6 @@ export default function LoginPage() {
             setAuthError(error.message)
           } else {
             setAuthSuccess(true)
-            // Clear URL params
             window.history.replaceState({}, document.title, '/')
           }
           setVerifying(false)
@@ -62,6 +61,9 @@ export default function LoginPage() {
     setLoading(true)
     const { error } = await signInOAuth({
       provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      }
     })
     if (error) {
       alert(error.message)
