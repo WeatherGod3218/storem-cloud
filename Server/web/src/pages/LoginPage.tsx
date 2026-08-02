@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react'
 
-import { createClient } from '@supabase/supabase-js'
 import { useAuth } from '@/context/AuthContext'
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-)
 
 export default function LoginPage() {
-  const {user, logout} = useAuth()
+  const {verifyOtp, signInOtp, signInOAuth, signOut,  user} = useAuth()
 
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
@@ -28,8 +23,7 @@ export default function LoginPage() {
 
     if (token_hash) {
       // Verify the OTP token
-      supabase.auth
-        .verifyOtp({
+      verifyOtp({
           token_hash,
           type: type || 'email',
         })
@@ -49,7 +43,7 @@ export default function LoginPage() {
   const handleLogin = async (event: any) => {
     event.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await signInOtp({
       email,
       options: {
         emailRedirectTo: window.location.origin,
@@ -66,7 +60,7 @@ export default function LoginPage() {
   const handleLoginGoogle = async (event: any) => {
     event.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await signInOAuth({
       provider: "google",
     })
     if (error) {
@@ -78,8 +72,7 @@ export default function LoginPage() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    logout()
+    await signOut()
   }
 
   // Show verification state

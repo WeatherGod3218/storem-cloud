@@ -27,7 +27,7 @@ RUN go build -o server .
 
 FROM alpine:latest
 
-RUN apk add --no-cache ffmpeg
+RUN apk add --no-cache ffmpeg curl
 
 WORKDIR /app
 COPY --from=gobuilder /app/server .

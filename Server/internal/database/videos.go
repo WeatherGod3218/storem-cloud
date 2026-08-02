@@ -125,7 +125,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 		videos = append(videos, models.GetVideoGroupPart{
 			RowID:             rowId,
-			S3Id:              s3Id,
+			S3ID:              s3Id,
 			CustomTitle:       customTitle,
 			CustomDescription: customDesc,
 			UserId:            userId,
@@ -223,7 +223,7 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 		S3ID:              s3Id,
 		CustomTitle:       customTitle,
 		CustomDescription: customDesc,
-		UserId:            userId,
+		UserID:            userId,
 		Filename:          filename,
 		Timestamp:         timestamp.Unix(),
 	}
@@ -243,7 +243,7 @@ func CreateVideoRow(video models.VideoDatabaseEntry) (string, error) {
 	_, err = db.Exec(ctx, `
 		INSERT INTO videos (row_id, s3_id, user_id, filename, file_size, file_length, file_mod_date)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, rowId, video.VideoId, video.UserId, video.Filename, video.FileSize, video.FileLength, video.FileModDate)
+	`, rowId, video.VideoID, video.UserID, video.Filename, video.FileSize, video.FileLength, video.FileModDate)
 
 	if err != nil {
 		return "", err

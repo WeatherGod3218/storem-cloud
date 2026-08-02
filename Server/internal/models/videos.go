@@ -4,7 +4,7 @@ import "time"
 
 type GetVideoGroupPart struct {
 	RowID string `json:"row_id"`
-	S3Id  string `json:"s3_id"`
+	S3ID  string `json:"s3_id"`
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
@@ -17,7 +17,7 @@ type GetVideoGroupPart struct {
 
 type GetVideoGroupPartResponse struct {
 	RowID string `json:"row_id"`
-	S3Id  string `json:"s3_id"`
+	S3ID  string `json:"s3_id"`
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
@@ -59,7 +59,7 @@ type GetVideoDataDatabase struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
-	UserId    string `json:"user_id"`
+	UserID    string `json:"user_id"`
 	Filename  string `json:"filename"`
 	Timestamp int64  `json:"timestamp"`
 }
@@ -111,8 +111,8 @@ type VideoDatabaseEntry struct {
 	FileLength  float64   `json:"file_length"`
 	FileSize    int64     `json:"file_size"`
 	FileModDate time.Time `json:"file_mod_date"`
-	VideoId     string    `json:"video_id"`
-	UserId      string    `json:"user_id"`
+	VideoID     string    `json:"video_id"`
+	UserID      string    `json:"user_id"`
 }
 
 type VideoBackupProcessed struct {

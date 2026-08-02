@@ -7,6 +7,7 @@ import (
 	"github.com/WeatherGod3218/weather-reels-server/internal/database"
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
+	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
 	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
 	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 	"github.com/gin-gonic/gin"
@@ -117,12 +118,18 @@ func GetVideoGroup(c *gin.Context) {
 
 	videos := make([]models.GetVideoGroupPartResponse, len(videoEntries))
 	for i, video := range videoEntries {
-		thumbnailUrl, err := s3.GetThumbnailPresignedURL(video.S3Id)
+		var thumbnailURL string
+
+		thumbnailURL, err = redis.GetPresignedURL(video.S3ID, redis.Thumbnail)
 		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v1/api/videos", "method": "GetVideoGroup"}).Warning("failed create presigned url for thumbnail")
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error: "Unable to process request!",
-			})
+			thumbnailURL, err = s3.GetThumbnailPresignedURL(video.S3ID)
+			if err != nil {
+				logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
+				c.JSON(http.StatusBadRequest, models.ErrorResponse{
+					Error: "Unable to process request!",
+				})
+				return
+			}
 			return
 		}
 
@@ -130,12 +137,12 @@ func GetVideoGroup(c *gin.Context) {
 
 		videos[i] = models.GetVideoGroupPartResponse{
 			RowID:             video.RowID,
-			S3Id:              video.S3Id,
+			S3ID:              video.S3ID,
 			CustomTitle:       video.CustomTitle,
 			CustomDescription: video.CustomDescription,
 			Username:          username,
 			Filename:          video.Filename,
-			ThumbnailURL:      thumbnailUrl,
+			ThumbnailURL:      thumbnailURL,
 			Timestamp:         video.Timestamp,
 		}
 	}
@@ -279,12 +286,18 @@ func GetVideoData(c *gin.Context) {
 		return
 	}
 
-	videoURL, err := s3.CreateGetPresignedVideoURL(data.S3ID)
+	var videoURL string
+
+	videoURL, err = redis.GetPresignedURL(data.S3ID, redis.Video)
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "Unable to process request!",
-		})
+		videoURL, err = s3.CreateGetPresignedVideoURL(data.S3ID)
+		if err != nil {
+			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
+			c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Error: "Unable to process request!",
+			})
+			return
+		}
 		return
 	}
 
@@ -297,7 +310,7 @@ func GetVideoData(c *gin.Context) {
 		CustomTitle:       data.CustomTitle,
 		CustomDescription: data.CustomDescription,
 
-		Username: users.GetUsername(data.UserId),
+		Username: users.GetUsername(data.UserID),
 		Filename: data.Filename,
 		VideoURL: videoURL,
 

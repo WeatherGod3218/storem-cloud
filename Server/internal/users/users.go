@@ -51,16 +51,20 @@ func GetUserByEmail(email string) (*User, bool) {
 
 func GetUserByToken(token any, exists bool) *User {
 	if !exists {
+		logging.Logger.Info("Doesnt exist")
 		return nil
 	}
 
 	userToken, ok := token.(*models.UserToken)
 	if !ok || userToken.Email == nil {
+		logging.Logger.Info("Not okay")
 		return nil
 	}
 
 	userStruct, ok := GetUserByEmail(*userToken.Email)
 	if !ok {
+		logging.Logger.Info("didnt verify email")
+
 		return nil
 	}
 

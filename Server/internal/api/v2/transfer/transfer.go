@@ -62,8 +62,8 @@ func OnVideoUpload() {
 			FileSize:    event.Upload.Size,
 			FileLength:  filelength,
 			FileModDate: fileModDate,
-			VideoId:     uploadS3Key,
-			UserId:      userId,
+			VideoID:     uploadS3Key,
+			UserID:      userId,
 		}
 
 		rowId, err := database.CreateVideoRow(entry)

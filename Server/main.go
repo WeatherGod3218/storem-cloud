@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/WeatherGod3218/weather-reels-server/internal/database"
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
+	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
 	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
 	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 	"github.com/gin-contrib/cors"
@@ -30,7 +30,7 @@ import (
 var distFS embed.FS
 
 func serveIcon(c *gin.Context, icon []byte) {
-	c.Data(http.StatusOK, "image/svg+xml", icon)
+	c.Data(http.StatusOK, "image/png", icon)
 }
 
 func serveFrontend(c *gin.Context, index []byte) {
@@ -58,39 +58,54 @@ func main() {
 	logging.Logger.WithFields(logrus.Fields{"config": config}).Info("Loaded Config!")
 	users.InitUsers(config)
 
+	if err := redis.InitRedis(); err != nil {
+		//its dead, but thats fine because we dont neeeeed it
+		logging.Logger.Warnf("failed to initialize redis! continuing without %s", err)
+	}
+
 	if err := s3.InitS3(); err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to initialize s3 for the app %s", err))
+		logging.Logger.Fatalf("failed to initialize s3 for the app %s", err)
 	}
 
 	if err := database.InitDatabase(); err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to initialize database for the app %s", err))
+		logging.Logger.Fatalf("failed to initialize database for the app %s", err)
 	}
 
 	if err := transfer.InitTus(); err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to initialize tus protocol for the app %s", err))
+		logging.Logger.Fatalf("failed to initialize tus protocol for the app %s", err)
 	}
 
 	dist, err := fs.Sub(distFS, "web/dist")
 	if err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to initialize dist for the app %s", err))
+		logging.Logger.Fatalf("failed to initialize dist for the app %s", err)
 	}
 
 	assets, err := fs.Sub(dist, "assets")
 	if err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to initialize assets for the app %s", err))
+		logging.Logger.Fatalf("failed to initialize assets for the app %s", err)
 	}
 
 	index, err := fs.ReadFile(dist, "index.html")
 	if err != nil {
-		logging.Logger.Fatal(fmt.Sprintf("failed to load index %s", err))
+		logging.Logger.Fatalf("failed to load index %s", err)
 	}
 
-	icon, err := fs.ReadFile(dist, "favicon.svg")
+	icon, err := fs.ReadFile(dist, "favicon.png")
 	if err != nil {
 		logging.Logger.Fatal("No favicon?")
 	}
 
 	router := gin.Default()
+	router.GET("/health", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, models.SuccessResponse{
+			Success: true,
+		})
+	})
+
+	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{ //shut the f up
+		SkipPaths: []string{"/health"},
+	}))
+
 	router.RedirectTrailingSlash = false
 
 	frontend := router.Group("")
@@ -100,7 +115,12 @@ func main() {
 	frontend.GET("/favicon.ico", func(ctx *gin.Context) {
 		serveIcon(ctx, icon)
 	})
+
 	frontend.GET("/favicon.svg", func(ctx *gin.Context) { // just do both and make my life easy
+		serveIcon(ctx, icon)
+	})
+
+	frontend.GET("/favicon.png", func(ctx *gin.Context) { // theres a third now ig.
 		serveIcon(ctx, icon)
 	})
 

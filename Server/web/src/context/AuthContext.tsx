@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect} from "react"
-import type {ReactNode,} from "react"
+import type {ReactNode} from "react"
 
 import { createClient } from '@supabase/supabase-js'
-import type {Session} from '@supabase/supabase-js'
+import type {Session, AuthOtpResponse, OAuthResponse, AuthError, AuthResponse} from '@supabase/supabase-js'
 
 type UserData = {
     id: string
@@ -13,7 +13,11 @@ type AuthContextType = {
     user: UserData | null,
     authLoading: boolean,
     session: Session | null,
-    logout: () => void,
+    verifyOtp: (params: any) => Promise<AuthResponse>
+    signOut: (params?: any) => Promise<{error: AuthError | null}>
+    signInOtp: (params: any) => Promise<AuthOtpResponse>
+    signInOAuth: (params: any) => Promise<OAuthResponse>
+
 }
 
 type AuthProviderProps = {
@@ -31,27 +35,37 @@ export function AuthProvider({children}: AuthProviderProps) {
     const [session, setSession] = useState<Session | null>(null)
     const [authLoading, setLoading] = useState<boolean>(true)
 
-    function login(user: UserData) {
-        setUser(user)
+
+    async function signInOtp(params: any) {
+        return supabase.auth.signInWithOtp(params)
     }
 
-    function logout() {
-        setUser(null)
+    async function signInOAuth(params: any) {
+        return supabase.auth.signInWithOAuth(params)
+    }
+
+    async function signOut(params?: any) {
+        return supabase.auth.signOut(params)
+    }
+
+    async function verifyOtp(params: any) {
+        return supabase.auth.verifyOtp(params)
     }
 
     function syncUserFromClaims(session: Session | null) {
         supabase.auth.getClaims().then(({ data, error }) => {
         if (error || !data) {
-            logout()
+            setUser(null)
             setLoading(false)
             return
         }
         setSession(session)
 
-        login({
+        setUser({
             id: data.claims.sub,
             email: data.claims.email,
         })
+  
 
         setLoading(false)
         })
@@ -62,7 +76,7 @@ export function AuthProvider({children}: AuthProviderProps) {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
                 syncUserFromClaims(session)
             } else if (event == "SIGNED_OUT") {
-                logout()
+                setUser(null)                
                 setSession(null)
                 setLoading(false)
                 return
@@ -79,7 +93,10 @@ export function AuthProvider({children}: AuthProviderProps) {
                 user,
                 authLoading,
                 session,
-                logout
+                verifyOtp,
+                signInOtp,
+                signInOAuth,
+                signOut
             }}
         >
         {children}

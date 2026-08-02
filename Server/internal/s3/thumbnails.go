@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func convertToThumbnailKey(fileName string) string {
+func ConvertToThumbnailKey(fileName string) string {
 	return fmt.Sprintf("thumbnails/%s.png", fileName)
 }
 
@@ -21,7 +21,7 @@ func CreatePermanentThumbnailURL(video string) (string, error) {
 		return "", fmt.Errorf("AWS_S3_UID environment variable is not set")
 	}
 	region := GetRegion()
-	key := convertToThumbnailKey(video)
+	key := ConvertToThumbnailKey(video)
 
 	fileUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key)
 	return fileUrl, nil
@@ -35,7 +35,7 @@ func StoreThumbnailImageBytes(uploadId string, byteData []byte) error {
 	if bucket == "" {
 		return errors.New("AWS_S3_UID environment variable is not set")
 	}
-	key := convertToThumbnailKey(uploadId)
+	key := ConvertToThumbnailKey(uploadId)
 
 	_, err := S3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(bucket),
@@ -60,7 +60,7 @@ func GetThumbnailPresignedURL(id string) (string, error) {
 	if bucket == "" {
 		return "", fmt.Errorf("AWS_S3_UID environment variable is not set")
 	}
-	key := convertToThumbnailKey(id)
+	key := ConvertToThumbnailKey(id)
 
 	lifetime := GetPresignURLTime()
 
