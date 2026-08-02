@@ -1,6 +1,8 @@
 package users
 
 import (
+	"strings"
+
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
 )
@@ -28,7 +30,7 @@ func InitUsers(config models.Config) {
 
 		UsersById[user.UserID] = user
 		for _, email := range user.Emails {
-			UsersByEmail[email] = user
+			UsersByEmail[strings.ToLower(email)] = user
 		}
 		logging.Logger.Infof("Initalized User %s!", user.DisplayName)
 	}
@@ -45,7 +47,7 @@ func GetUsername(userId string) string {
 }
 
 func GetUserByEmail(email string) (*User, bool) {
-	user, ok := UsersByEmail[email]
+	user, ok := UsersByEmail[strings.ToLower(email)]
 	return user, ok
 }
 
@@ -63,7 +65,11 @@ func GetUserByToken(token any, exists bool) *User {
 
 	userStruct, ok := GetUserByEmail(*userToken.Email)
 	if !ok {
-		logging.Logger.Info("didnt verify email")
+		if userToken.Email != nil {
+			logging.Logger.Infof("didnt verify email: %s", *userToken.Email)
+		}
+
+		logging.Logger.Info("was no email")
 
 		return nil
 	}

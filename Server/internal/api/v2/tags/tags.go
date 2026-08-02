@@ -3,6 +3,7 @@ package tags
 import (
 	"net/http"
 
+	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
 	"github.com/WeatherGod3218/weather-reels-server/internal/database"
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
@@ -185,7 +186,7 @@ func DeleteVideoTag(c *gin.Context) {
 }
 
 func Routes(r *gin.RouterGroup) {
-	tags := r.Group("/tags")
+	tags := r.Group("/tags", auth.OAuthMiddleware())
 	tags.POST("/create", CreateTag)
 	tags.GET("/get", GetAllTags)
 
