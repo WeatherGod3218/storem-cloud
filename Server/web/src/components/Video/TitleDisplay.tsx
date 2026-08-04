@@ -14,14 +14,15 @@ import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 
 type VideoDataProps = {
-    title: string | null,
+    title?: string | null,
     filename: string,
     id: string,
+    can_modify: boolean
 }
 
 const ENDPOINT = "/api/v2/videos/title";
 
-const MAX_TITLE_LENGTH = 45
+const MAX_TITLE_LENGTH = 60
 
 function limitStringLength(input: string) {
     console.log(input)
@@ -29,7 +30,7 @@ function limitStringLength(input: string) {
 }
 
 export const VideoTitleDisplay = (props: VideoDataProps) => {
-    const { authLoading} = useAuth()
+    const { session, authLoading } = useAuth()
     const [isUpdating, setUpdating] = useState(false)
     const [title, setTitle] = useState(props.title ? limitStringLength(props.title) : limitStringLength(props.filename))
     
@@ -41,6 +42,7 @@ export const VideoTitleDisplay = (props: VideoDataProps) => {
             body: JSON.stringify(payload),
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`
             },
         }).then((res) => {
             if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
@@ -81,9 +83,14 @@ export const VideoTitleDisplay = (props: VideoDataProps) => {
         <div className="w-4/5 ">
             <Field orientation="horizontal">
                 {(!isUpdating && 
-                    <CardTitle className="justify-center items-center">
-                        {title}   <Button variant="outline" size="icon-xs" aria-label="Change Title" onClick={startUpdating}><Pencil /></Button>
-                    </CardTitle>
+                    <div className="flex flex-row w-full">
+                        <CardTitle className="line-clamp-1 justify-center items-center">
+                            {title}
+                        </CardTitle>
+                        {(props.can_modify) &&
+                            <Button variant="outline" size="icon-xs" aria-label="Change Title" onClick={startUpdating}><Pencil /></Button>   
+                        }        
+                    </div>
                 )}
                 {isUpdating &&
                     <Field className="flex items-center mb-2" orientation="horizontal">

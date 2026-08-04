@@ -74,10 +74,10 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 	args := make([]any, 0)
 
 	baseQuery := `
-		SELECT row_id, s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos WHERE status = 'Complete'
+		SELECT row_id, s3_id, custom_title, custom_description, visibility, user_id, filename, file_mod_date FROM videos WHERE status = 'Complete'
 	`
 
-	if user == nil || !user.CanViewPrivateVideos() {
+	if (user == nil) || !user.CanViewPrivateVideos() {
 		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
 	}
 
@@ -86,7 +86,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 		cmp = ">"
 	}
 
-	if options.Timestamp != nil && options.RowID != nil {
+	if options.Timestamp != nil && options.RowID != nil && *options.RowID != "" {
 		args = append(args, time.Unix(*options.Timestamp, 0))
 		args = append(args, options.RowID)
 		baseQuery = fmt.Sprintf("%s AND (file_mod_date, row_id) %s ($%d, $%d)", baseQuery, cmp, len(args)-1, len(args))
@@ -115,12 +115,13 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 			s3Id        string
 			customTitle *string
 			customDesc  *string
+			visibility  string
 			userId      string
 			filename    string
 			timestamp   time.Time
 		)
 
-		if err := rows.Scan(&rowId, &s3Id, &customTitle, &customDesc, &userId, &filename, &timestamp); err != nil {
+		if err := rows.Scan(&rowId, &s3Id, &customTitle, &customDesc, &visibility, &userId, &filename, &timestamp); err != nil {
 			return nil, false, err
 		}
 
@@ -129,6 +130,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 			S3ID:              s3Id,
 			CustomTitle:       customTitle,
 			CustomDescription: customDesc,
+			Visibility:        visibility,
 			UserId:            userId,
 			Filename:          filename,
 			Timestamp:         timestamp.Unix(),
@@ -207,16 +209,17 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 		s3Id        string
 		customTitle *string
 		customDesc  *string
+		visibility  string
 		userId      string
 		filename    string
 		timestamp   time.Time
 	)
 
 	if err := db.QueryRow(ctx, `
-		SELECT s3_id, custom_title, custom_description, user_id, filename, file_mod_date FROM videos
+		SELECT s3_id, custom_title, custom_description, visibility, user_id, filename, file_mod_date FROM videos
 		WHERE row_id = $1
 		LIMIT 1 
-	`, rowId).Scan(&s3Id, &customTitle, &customDesc, &userId, &filename, &timestamp); err != nil {
+	`, rowId).Scan(&s3Id, &customTitle, &customDesc, &visibility, &userId, &filename, &timestamp); err != nil {
 		return nil, err
 	}
 
@@ -225,6 +228,7 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 		S3ID:              s3Id,
 		CustomTitle:       customTitle,
 		CustomDescription: customDesc,
+		Visibility:        visibility,
 		UserID:            userId,
 		Filename:          filename,
 		Timestamp:         timestamp.Unix(),

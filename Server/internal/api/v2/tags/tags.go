@@ -23,6 +23,13 @@ import (
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/create [post]
 func CreateTag(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+
+	if user == nil || !user.CanModifyVideoData() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+	}
 	var req *models.CreateTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -125,6 +132,14 @@ func GetVideoTags(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/add [post]
 func AddVideoTag(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+
+	if user == nil || !user.CanModifyVideoData() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+	}
+
 	var req *models.ModifyVideoTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -162,6 +177,14 @@ func AddVideoTag(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/delete [delete]
 func DeleteVideoTag(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+
+	if user == nil || !user.CanModifyVideoData() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+	}
+
 	var req *models.ModifyVideoTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {

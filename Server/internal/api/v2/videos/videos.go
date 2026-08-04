@@ -30,7 +30,7 @@ func VerifyVideos(c *gin.Context) {
 	var videoList []string
 
 	if err := c.ShouldBindJSON(&videoList); err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v1/api/videos", "method": "VerifyVideos"}).Warning("failed to bind video list")
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "VerifyVideos"}).Warning("failed to bind video list")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request!",
 		})
@@ -145,6 +145,10 @@ func GetVideoGroup(c *gin.Context) {
 			ThumbnailURL:      thumbnailURL,
 			Timestamp:         video.Timestamp,
 		}
+
+		if user != nil && user.CanViewPrivateVideos() {
+			videos[i].Visibility = video.Visibility
+		}
 	}
 
 	resp := models.GetVideoGroupResponse{
@@ -166,10 +170,18 @@ func GetVideoGroup(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      models.ChangeVideoTitleRequest  true  "New Title"
-// @Success      200      {object}  models.SuccessResponse
+// @Success      204      none
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/title [put]
 func ChangeVideoTitle(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+	if user == nil || !user.CanModifyVideoData() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+		return
+	}
+
 	var req *models.ChangeVideoTitleRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -188,9 +200,7 @@ func ChangeVideoTitle(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 // ChangeVideoDescription godoc
@@ -204,6 +214,14 @@ func ChangeVideoTitle(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/description [put]
 func ChangeVideoDescription(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+	if user == nil || !user.CanModifyVideoData() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+		return
+	}
+
 	var req *models.ChangeVideoDescriptionRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -222,9 +240,7 @@ func ChangeVideoDescription(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 // GetRandomVideo godoc
@@ -267,6 +283,8 @@ func GetRandomVideo(c *gin.Context) {
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/video [get]
 func GetVideoData(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+
 	id := c.Param("id")
 
 	if id == "" {
@@ -283,6 +301,16 @@ func GetVideoData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request!",
 		})
+		return
+	}
+
+	if user == nil {
+		if data.Visibility != "Public" {
+			c.JSON(http.StatusUnauthorized, models.ErrorResponse{Error: "You do not have permission for this action."})
+			return
+		}
+	} else if !user.CanViewVideo(data) {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{Error: "You do not have permission for this action."})
 		return
 	}
 

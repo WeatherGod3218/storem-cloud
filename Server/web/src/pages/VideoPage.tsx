@@ -1,9 +1,13 @@
 import { Header } from "../components/Header"
 
-import { useState, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
+
 import { useParams } from "react-router"
 import { VideoCard, SkeletonVideoCard } from "@/components/Video/VideoCard"
+import { useAuth } from "@/context/AuthContext"
 //import { useMediaQuery } from "@/hooks/MediaQuery";
+import { useNavigate } from "react-router"
+import { useEffect } from "react"
 
 const ENDPOINT = "/api/v2/videos/video";
 
@@ -11,53 +15,73 @@ type VideoData = {
     row_id: string,
     s3_id: string,
 
-    custom_title: string | null,
-    custom_description: string | null,
+    custom_title?: string | null,
+    custom_description?: string | null,
+
+    visibility?: string,
 
     username: string,
     filename: string,
     video_url: string,
 
     timestamp: number,
+    can_modify: boolean
 }
 
-export const VideoPage = () => {    
-    let params = useParams()
-    //const isVertical = useMediaQuery("(max-width: 768px)");
+//ig bro
+class HttpError extends Error {
+  status: number;
 
-    const [isLoading, setLoading] = useState<boolean>(true)
-    const [data, setData] = useState<VideoData>({
-        row_id: "",
-        s3_id: "",
-        custom_title: "",
-        custom_description: "",
-        username: "",
-        filename: "",
-        video_url: "",
-        timestamp: 0,
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+  }
+}
+
+export const VideoPage = () => {   
+	const { session, authLoading} = useAuth()
+    let params = useParams()
+    const navigate = useNavigate()
+
+    const goToUnauthorized = () => {
+        navigate("/unauthorized")
+    }
+
+    const { isPending, error, data } = useQuery<VideoData, Error>({
+        queryKey: [`get-video-data`, params.id],
+        retry: false,
+        queryFn: () =>
+        fetch(`${ENDPOINT}/${params.id}`, {
+			method: "GET",
+			headers: {
+				"Authorization": `Bearer ${session?.access_token}`
+		    },
+        }).then((res) => {
+            if (!res.ok) throw new HttpError(`Failed to get video data: ${res.status}`, res.status)
+            return res.json()
+        }),
     })
 
-
     useEffect(() => {
-        let cancelled = false
-        setLoading(true);
-
-        fetch(`${ENDPOINT}/${params.id}`)
-        .then(res => {if (!res.ok) {throw new Error(`HTTP ERROR: ${res.status}`)} return res.json()})
-        .then(data => { if (!cancelled) setData(data); })        
-        .catch(err => { if (!cancelled) {console.log(`${err}`)}})
-        .finally(() => { if (!cancelled) setLoading(false); })
-        return () => { cancelled = true; };
-    }, [params.id]);
-
-    console.log(params.id)
+        if (error instanceof HttpError && error.status === 401) {
+            goToUnauthorized();
+        }
+    }, [error]);
 
     return (
         <div className="w-full h-screen flex flex-col">
             <Header/>
             <div className="flex-1 w-full min-h-0 overflow-hidden">
-                {!isLoading ? <VideoCard {...data}
-                /> : <SkeletonVideoCard/>}
+                {isPending || authLoading ? (
+                    <SkeletonVideoCard />
+                ) : error ? (
+                    <div>Failed to load video.</div>
+                ) : !data ? (
+                    <div>No video found.</div>
+                ) : (
+                    <VideoCard {...data} />
+                )}
             </div>
         </div>
     )

@@ -13,6 +13,7 @@ import { Plus } from "lucide-react"
 
 type TagProps = {
     video_id: string
+    can_modify: boolean
 }
 
 type Tag = {
@@ -120,21 +121,23 @@ export const TagDisplay = (props: TagProps) => {
                 <h6 className="flex text-muted-foreground">No tags on this video.</h6>   
             ) : (
                 [...tags.values()].map((tag: Tag) => (
-                    <TagBadge key={tag.tag_id} tag={tag} onRemove={(tag) => {
+                    <TagBadge key={tag.tag_id} tag={tag} cantRemove={!props.can_modify} onRemove={(tag) => {
                         removeMutation.mutate(tag)
                     }}/>
                 ))
             )}
 
-            <Button 
-                className="ml-1 text-muted-foreground" 
-                variant="outline" 
-                onClick={() => {setOpen(true)}} 
-                size="icon-xs" 
-                aria-label="Add Tag"
-            >
-                <Plus />
-            </Button>
+            {(props.can_modify) && 
+                <Button 
+                    className="ml-1 text-muted-foreground" 
+                    variant="outline" 
+                    onClick={() => {setOpen(true)}} 
+                    size="icon-xs" 
+                    aria-label="Add Tag"
+                >
+                    <Plus />
+                </Button>            
+            }
             </>
             )}
         </div>

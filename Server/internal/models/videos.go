@@ -9,6 +9,8 @@ type GetVideoGroupPart struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
+	Visibility string `json:"visibility"`
+
 	UserId       string `json:"user_id"`
 	Timestamp    int64  `json:"timestamp"`
 	ThumbnailURL string `json:"thumbnail"`
@@ -21,6 +23,8 @@ type GetVideoGroupPartResponse struct {
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
+
+	Visibility string `json:"visibility"`
 
 	Username     string `json:"username"`
 	Filename     string `json:"filename"`
@@ -46,10 +50,14 @@ type GetVideoDataResponse struct {
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
 
+	Visibility string `json:"visibility"`
+
 	Username  string `json:"username"`
 	Filename  string `json:"filename"`
 	VideoURL  string `json:"video_url"`
 	Timestamp int64  `json:"timestamp"`
+
+	CanModify bool `json:"can_modify"`
 }
 
 type GetVideoDataDatabase struct {
@@ -58,6 +66,8 @@ type GetVideoDataDatabase struct {
 
 	CustomTitle       *string `json:"custom_title"`
 	CustomDescription *string `json:"custom_description"`
+
+	Visibility string `json:"visibility"`
 
 	UserID    string `json:"user_id"`
 	Filename  string `json:"filename"`

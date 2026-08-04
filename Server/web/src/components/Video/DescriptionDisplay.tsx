@@ -6,48 +6,69 @@ import { CardDescription } from "@/components/ui/card"
 
 import { useState } from "react"
 
+import {
+  useMutation
+} from '@tanstack/react-query'
+import { useAuth } from "@/context/AuthContext"
+
 type VideoDataProps = {
-    description: string | null,
+    description?: string | null,
     id: string,
+    can_modify: boolean
 }
 
 const DEFAULT_DESCRIPTION = "No description has been given."
 const ENDPOINT = "/api/v2/videos/description";
 
 export const VideoDescDisplay = (props: VideoDataProps) => {
+    const { session, authLoading } = useAuth()
     const [isUpdating, setUpdating] = useState(false)
     const [desc, setDesc] = useState(props.description ? props.description : DEFAULT_DESCRIPTION)
-    // const [description, setDescription] = useState(tempDesc)
+    
+    const updateDescRequest = useMutation<null, Error, {row_id: string, description: string}>({
+		mutationKey: [`update-video-description`, props.id],
+		mutationFn: (payload: any) =>
+        fetch(`${ENDPOINT}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`
+            },
+        }).then((res) => {
+            if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
+            return res.json()
+        }),
+		onError: (err) => {
+			console.log(err)			
+		},
+		onSettled: () => {
+			setUpdating(false)
+		}
+	})
     
     function startUpdating() {
         setUpdating(true)
     }
 
     function stopUpdating() {
-        let cancelled = false
+        if (!desc || desc.length == 0){
+            setDesc(DEFAULT_DESCRIPTION)
+            return
+        }
+
+        if (authLoading) {
+            return //TODO: Send Error Popup
+        }
         const body = {
             row_id: props.id,
             description: desc
         }
 
-        fetch(`${ENDPOINT}`, {
-            method: "PUT",
-            body: JSON.stringify(body),
-            headers: {
-                "Content-Type": "application/json",
-            },
-        })
-        .then(res => {if (!res.ok) {throw new Error(`HTTP ERROR: ${res.status}`)} return res.json()})
-        .catch(err => { if (!cancelled) {console.log(`${err}`)}})
-        .finally(() => { if (!cancelled) setUpdating(false); })
-        return () => { cancelled = true; };
+        updateDescRequest.mutate(body)
     }
 
     function updateTitle(newDesc: string) {
-        if (!newDesc){
-            setDesc(DEFAULT_DESCRIPTION)
-            return
-        }
         setDesc(newDesc)
     }
 
@@ -55,9 +76,15 @@ export const VideoDescDisplay = (props: VideoDataProps) => {
         <div>
             <Field orientation="horizontal">
                 {(!isUpdating && 
+                <div className="flex flex-row w-full">
                     <CardDescription className="justify-center items-center">
-                        {desc}   <Button variant="outline" size="icon-xs" aria-label="Change Description" onClick={startUpdating}><Pencil /></Button>
+                        {desc}   
                     </CardDescription>
+                    {(props.can_modify) &&
+                       <Button variant="outline" size="icon-xs" aria-label="Change Description" onClick={startUpdating}><Pencil /></Button>                    
+                    }
+                </div>
+
                 )}
                 {isUpdating &&
                     <Field className="flex items-center mb-2" orientation="horizontal">

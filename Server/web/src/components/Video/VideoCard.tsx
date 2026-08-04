@@ -21,14 +21,17 @@ type VideoData = {
     row_id: string,
     s3_id: string,
 
-    custom_title: string | null,
-    custom_description: string | null,
+    custom_title?: string | null,
+    custom_description?: string | null,
+
+    visibility?: string,
 
     username: string,
     filename: string,
     video_url: string,
 
     timestamp: number,
+    can_modify: boolean
 }
 
 // const DESCRIPTION_MAX_CHAR = 300
@@ -44,7 +47,7 @@ const VideoPlayer = memo(({ src }: { src: string }) => (
         src={src}
         controls
         autoPlay
-        preload="metadata"
+        preload="auto"
     > 
         Your browser does not support the video tag.
     </video>
@@ -64,12 +67,12 @@ export const VideoCard = (props: VideoData) => {
                         </AspectRatio>
                     </CardContent>
                     <CardContent className={isVertical ? "pt-3" : "pt-3 h-full"}>
-                        <div className="flex justify-between items-center">
-                            <VideoTitleDisplay key={props.row_id} title={props.custom_title} filename={props.filename} id={props.row_id}/>
-                            <Badge variant="secondary" className="mr-1">{props.username}</Badge> 
+                        <div className="flex flex-row justify-between items-center">
+                            <VideoTitleDisplay key={props.row_id} can_modify={props.can_modify} title={props.custom_title} filename={props.filename} id={props.row_id}/>
+                            <Badge variant="secondary" className="flex mr-1">{props.username}</Badge> 
                         </div>                            
-                        <VideoDescDisplay key={props.row_id} description={props.custom_description} id={props.row_id}/>
-                        <TagDisplay video_id={props.row_id}/>              
+                        <VideoDescDisplay key={props.row_id} can_modify={props.can_modify} description={props.custom_description} id={props.row_id}/>
+                        <TagDisplay video_id={props.row_id} can_modify={props.can_modify}/>              
                     </CardContent>
                 </div>
                 {isVertical ? ( 

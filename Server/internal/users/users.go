@@ -82,7 +82,16 @@ func GetUserByToken(token any, exists bool) *User {
 }
 
 func (user *User) CanModifyVideoData() bool {
-	switch user.Role {
+	switch strings.ToLower(user.Role) {
+	case "owner", "admin":
+		return true
+	default:
+		return false
+	}
+}
+
+func (user *User) CanViewVideo(video *models.GetVideoDataDatabase) bool {
+	switch strings.ToLower(user.Role) {
 	case "owner", "admin":
 		return true
 	default:
@@ -91,7 +100,7 @@ func (user *User) CanModifyVideoData() bool {
 }
 
 func (user *User) CanViewPrivateVideos() bool {
-	switch user.Role {
+	switch strings.ToLower(user.Role) {
 	case "owner", "admin":
 		return true
 	default:
