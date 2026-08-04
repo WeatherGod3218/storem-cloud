@@ -336,12 +336,14 @@ func GetVideoData(c *gin.Context) {
 
 		CustomTitle:       data.CustomTitle,
 		CustomDescription: data.CustomDescription,
+		Visibility:        data.Visibility,
 
 		Username: users.GetUsername(data.UserID),
 		Filename: data.Filename,
 		VideoURL: videoURL,
 
 		Timestamp: data.Timestamp,
+		CanModify: ((user != nil) && user.CanModifyVideoData()),
 	}
 
 	c.JSON(http.StatusOK, resp)
