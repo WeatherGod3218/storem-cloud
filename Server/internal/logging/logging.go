@@ -11,10 +11,10 @@ import (
 var Logger *logrus.Logger = makeLogger()
 
 func makeLogger() *logrus.Logger {
-	level := logrus.WarnLevel
+	level := logrus.InfoLevel
 
 	if os.Getenv("GIN_MODE") == "release" {
-		level = logrus.InfoLevel
+		level = logrus.WarnLevel
 	}
 
 	if testing.Testing() {
