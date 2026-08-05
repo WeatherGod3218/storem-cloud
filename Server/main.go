@@ -29,12 +29,28 @@ import (
 //go:embed web/dist
 var distFS embed.FS
 
+var indexBuffer string = ""
+
 func serveIcon(c *gin.Context, icon []byte) {
 	c.Data(http.StatusOK, "image/png", icon)
 }
 
-func serveFrontend(c *gin.Context, index []byte) {
-	c.Data(http.StatusOK, "text/html; charset=utf-8", index)
+func newIndexFile(metadata string) *string {
+	newFile := strings.Replace(indexBuffer, "<!--SSR_META-->", metadata, 1)
+	return &newFile
+}
+
+func serveFrontend(c *gin.Context) {
+	finalIndex := &indexBuffer
+	if strings.HasPrefix(c.FullPath(), "/videos/video/") {
+		finalIndex = HandleEmbedForVideo(c)
+	}
+
+	if finalIndex == nil {
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(indexBuffer))
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(*finalIndex))
 }
 
 // @title WeatherReels
@@ -89,6 +105,7 @@ func main() {
 	if err != nil {
 		logging.Logger.Fatalf("failed to load index %s", err)
 	}
+	indexBuffer = string(index)
 
 	icon, err := fs.ReadFile(dist, "favicon.png")
 	if err != nil {
@@ -148,7 +165,7 @@ func main() {
 				})
 				return
 			}
-			serveFrontend(c, index)
+			serveFrontend(c)
 		})
 	}
 

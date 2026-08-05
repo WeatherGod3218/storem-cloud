@@ -111,7 +111,8 @@ function useVideoGroup() {
 }
 
 export default function VideoGridInfinite() {
-    const { videos, loadMore, hasMore, loading, newestFirst, setNewestFirst, error, resetVideos } = useVideoGroup();
+    const { authLoading} = useAuth()
+	const { videos, loadMore, hasMore, loading, newestFirst, setNewestFirst, error, resetVideos } = useVideoGroup();
     const [isIntersecting, setIsIntersecting] = useState(false);
 
     const sentinelRef = useRef(null);
@@ -156,7 +157,17 @@ export default function VideoGridInfinite() {
 					<p className="pl-1 text-l text-slate-500">{ newestFirst ? "Newest First" : "Oldest First"}</p>
 				</div>
 			</div>
-
+			{error && (
+				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
+					<span>Couldn't load videos: {error}</span>
+					<button
+					onClick={loadMore}
+					className="ml-auto text-red-700 underline underline-offset-2 hover:text-red-800"
+					>
+					Retry
+					</button>
+				</div>
+			)}
 			{error && (
 				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
 					<span>Couldn't load videos: {error}</span>
@@ -169,7 +180,12 @@ export default function VideoGridInfinite() {
 				</div>
 			)}
 
-			{videos.length === 0 && !loading && !error && (
+			{ (authLoading) &&
+				<div className="text-center py-16 text-slate-500 text-sm">
+					Loading Videos. Please Wait.
+				</div>				
+			}
+			{videos.length === 0 && !authLoading && !loading && !error && (
 				<div className="text-center py-16 text-slate-500 text-sm">
 					No videos yet.
 				</div>
@@ -177,7 +193,7 @@ export default function VideoGridInfinite() {
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				{videos.map((video) => (
-					<ThumbnailCard key={video.row_id} visibility={video.visibility} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+					<ThumbnailCard key={video.row_id} {...video} />
 				))}
 				{loading && Array.from({ length: 6 }).map((_, i) => <ThumbnailSkeletonCard key={`sk-${i}`} />)}
 			</div>

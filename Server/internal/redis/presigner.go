@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
 	"github.com/redis/go-redis/v9"
 )
@@ -18,6 +17,24 @@ const (
 	Thumbnail URLTypes = "thumbnail"
 )
 
+func refreshKeyVal(itemKey string, ver URLTypes) (string, error) {
+	var newUrl string
+	var err error
+	switch ver {
+	case Thumbnail:
+		newUrl, err = s3.GetThumbnailPresignedURL(itemKey)
+	case Video:
+		newUrl, err = s3.CreateGetPresignedVideoURL(itemKey)
+	default:
+		return "", fmt.Errorf("unknown url type %s", ver)
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return newUrl, nil
+}
+
 func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	if !RedisInitalized {
 		return "", errors.New("redis was not intialized")
@@ -26,7 +43,6 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	defer cancel()
 
 	cacheKey := fmt.Sprintf("presigned:%s%s", ver, s3Key)
-	logging.Logger.Info(cacheKey)
 
 	url, err := client.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -46,16 +62,7 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	if setLock {
 		defer client.Del(ctx, lockKey)
 
-		var newUrl string
-		var err error
-		switch ver {
-		case Thumbnail:
-			newUrl, err = s3.GetThumbnailPresignedURL(s3Key)
-		case Video:
-			newUrl, err = s3.CreateGetPresignedVideoURL(s3Key)
-		default:
-			return "", fmt.Errorf("unknown url type %s", ver)
-		}
+		newURL, err := refreshKeyVal(s3Key, ver)
 		if err != nil {
 			return "", err
 		}
@@ -65,11 +72,11 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 			ttl = s3.GetPresignURLTime()
 		}
 
-		if err := client.Set(ctx, cacheKey, newUrl, ttl).Err(); err != nil {
+		if err := client.Set(ctx, cacheKey, newURL, ttl).Err(); err != nil {
 			return "", err
 		}
 
-		return newUrl, nil
+		return newURL, nil
 	}
 
 	//IM BACK ON MY BULLSHITTTTT

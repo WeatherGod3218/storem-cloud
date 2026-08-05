@@ -19,15 +19,15 @@ import { cn } from "@/lib/utils"
 import { TagFooter } from "./TagFooter"
 
 type ThumbnailCardProps = {
-    rowId: string,
+    row_id: string,
 
     username: string,
 
     filename: string,
     thumbnail: string,
 
-    customTitle?: string | null,
-    customDescription?: string | null,
+    custom_title?: string | null,
+    custom_description?: string | null,
 
     visibility?: string
 }
@@ -43,7 +43,7 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
     const navigate = useNavigate()
 
     const handleSelect = () => {
-        navigate(`/video/${props.rowId}`)
+        navigate(`/video/${props.row_id}`)
     }
 
     return (
@@ -70,10 +70,10 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
             )}
             />
         <CardHeader>
-            <CardTitle className="w-full min-w-0 line-clamp-2 break-words">{props.customTitle ? props.customTitle : props.filename}</CardTitle>
+            <CardTitle className="w-full min-w-0 line-clamp-2 break-words">{props.custom_title ? props.custom_title : props.filename}</CardTitle>
             <CardAction>
             </CardAction>
-            <CardDescription>{props.customDescription ? limitString(props.customDescription) : "No description has been given"}</CardDescription>
+            <CardDescription>{props.custom_description ? limitString(props.custom_description) : "No description has been given"}</CardDescription>
             <Badge variant="secondary" className=""><User/>{props.username}</Badge>
             {(props.visibility && 
             (
@@ -85,7 +85,7 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
         </CardHeader>
         <div className="flex-1"/> 
         <CardFooter>
-            <TagFooter key={props.rowId} video_id={props.rowId}/>
+            <TagFooter key={props.row_id} video_id={props.row_id}/>
         </CardFooter>
     </Card>
     )

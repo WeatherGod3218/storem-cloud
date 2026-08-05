@@ -22,8 +22,10 @@ type VideoData = {
 
     username: string,
     filename: string,
-    video_url: string,
 
+    video_url: string,
+    thumbnail_url: string,
+    
     timestamp: number,
     can_modify: boolean
 }

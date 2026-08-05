@@ -52,10 +52,13 @@ type GetVideoDataResponse struct {
 
 	Visibility string `json:"visibility"`
 
-	Username  string `json:"username"`
-	Filename  string `json:"filename"`
-	VideoURL  string `json:"video_url"`
-	Timestamp int64  `json:"timestamp"`
+	Username string `json:"username"`
+	Filename string `json:"filename"`
+
+	VideoURL     string `json:"video_url"`
+	ThumbnailURL string `json:"thumbnail_url"`
+
+	Timestamp int64 `json:"timestamp"`
 
 	CanModify bool `json:"can_modify"`
 }
