@@ -10,6 +10,7 @@ import { useState} from "react"
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useAuth } from '@/context/AuthContext'
 
 type TagProps = {
     video_id: string
@@ -28,6 +29,7 @@ const REMOVE_TAG_ENDPOINT = "/api/v2/tags/video/remove";
 
 
 export const TagDisplay = (props: TagProps) => {
+    const { session } = useAuth()
     const [open, setOpen] = useState(false)
     const queryClient = useQueryClient()
 
@@ -37,7 +39,8 @@ export const TagDisplay = (props: TagProps) => {
         fetch(`${REMOVE_TAG_ENDPOINT}`, {
             method: "DELETE",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`
             },
             body: JSON.stringify({
                 video_id: props.video_id,
@@ -66,7 +69,8 @@ export const TagDisplay = (props: TagProps) => {
         fetch(`${ADD_TAG_ENDPOINT}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`
             },
             body: JSON.stringify({
                 video_id: props.video_id,

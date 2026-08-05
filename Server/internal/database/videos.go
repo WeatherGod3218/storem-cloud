@@ -201,6 +201,27 @@ func ChangeVideoDescription(rowId string, desc string) error {
 	return nil
 }
 
+func ChangeVideoVisibility(rowId string, visibility string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	switch visibility {
+	case "Public", "Private":
+	default:
+		return fmt.Errorf("invalid visibility request %s", visibility)
+	}
+
+	if _, err := db.Exec(ctx, `
+		UPDATE videos
+		SET visibility = $1
+		WHERE row_id = $2
+	`, visibility, rowId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()

@@ -29,6 +29,7 @@ func CreateTag(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
 			Error: "You do not have permission for this action.",
 		})
+		return
 	}
 	var req *models.CreateTagRequest
 
@@ -138,6 +139,7 @@ func AddVideoTag(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
 			Error: "You do not have permission for this action.",
 		})
+		return
 	}
 
 	var req *models.ModifyVideoTagRequest
@@ -183,6 +185,7 @@ func DeleteVideoTag(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
 			Error: "You do not have permission for this action.",
 		})
+		return
 	}
 
 	var req *models.ModifyVideoTagRequest

@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 
 import { Fragment } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 type Tag = {
     tag_id: string,
@@ -64,6 +65,7 @@ function useTagSet(tags: Tag[]) {
 
 
 export const TagPopup = (props: TagProps) => {
+    const { session } = useAuth()
     const [validInput, setValidInput] = useState<boolean>(true)
     const {has} = useTagSet(props.tags)
     const [createOpen, setCreateOpen] = useState<boolean>(false)
@@ -75,7 +77,8 @@ export const TagPopup = (props: TagProps) => {
         fetch(`${CREATE_TAG_ENDPOINT}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`
             },
             body: JSON.stringify({
                 name: tagName,

@@ -80,15 +80,15 @@ export const VideoTitleDisplay = (props: VideoDataProps) => {
     }
 
     return (
-        <div className="w-4/5 ">
+        <div className="w-full flex-1">
             <Field orientation="horizontal">
                 {(!isUpdating && 
                     <div className="flex flex-row w-full">
-                        <CardTitle className="line-clamp-1 justify-center items-center">
+                        <CardTitle className="line-clamp-1 truncate items-center">
                             {title}
                         </CardTitle>
                         {(props.can_modify) &&
-                            <Button variant="outline" size="icon-xs" aria-label="Change Title" onClick={startUpdating}><Pencil /></Button>   
+                            <Button className="shrink-0" variant="outline" size="icon-xs" aria-label="Change Title" onClick={startUpdating}><Pencil /></Button>   
                         }        
                     </div>
                 )}

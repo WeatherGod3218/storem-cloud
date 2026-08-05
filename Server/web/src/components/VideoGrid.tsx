@@ -25,6 +25,7 @@ type Video = {
 
 	custom_title?: string,
 	custom_description?: string,
+	visibility?: string,
 
 	timestamp: string,
 }
@@ -176,7 +177,7 @@ export default function VideoGridInfinite() {
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				{videos.map((video) => (
-					<ThumbnailCard key={video.row_id} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+					<ThumbnailCard key={video.row_id} visibility={video.visibility} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
 				))}
 				{loading && Array.from({ length: 6 }).map((_, i) => <ThumbnailSkeletonCard key={`sk-${i}`} />)}
 			</div>

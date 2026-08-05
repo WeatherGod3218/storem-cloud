@@ -10,6 +10,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 
+import { Eye, EyeOff, User } from "lucide-react"
+
 import {Badge} from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -26,6 +28,8 @@ type ThumbnailCardProps = {
 
     customTitle?: string | null,
     customDescription?: string | null,
+
+    visibility?: string
 }
 
 const DESCRIPTION_MAX_CHAR = 100
@@ -70,7 +74,14 @@ export const ThumbnailCard = (props: ThumbnailCardProps) => {
             <CardAction>
             </CardAction>
             <CardDescription>{props.customDescription ? limitString(props.customDescription) : "No description has been given"}</CardDescription>
-            <Badge variant="secondary">{props.username}</Badge>
+            <Badge variant="secondary" className=""><User/>{props.username}</Badge>
+            {(props.visibility && 
+            (
+                props.visibility == "Public" ? (
+                < Badge variant="secondary" className="ml-2"> <Eye/>{props.visibility}</Badge>
+            ) : (
+                <Badge variant="secondary" className="ml-2">  <EyeOff/>{props.visibility}</Badge>
+            )))} 
         </CardHeader>
         <div className="flex-1"/> 
         <CardFooter>

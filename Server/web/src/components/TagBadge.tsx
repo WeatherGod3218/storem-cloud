@@ -1,5 +1,6 @@
 import {Badge} from "@/components/ui/badge"
 import { X } from "lucide-react"
+import { useState } from "react"
 
 type Tag = {
     tag_id: string,
@@ -15,11 +16,19 @@ type TagProps = {
 
 
 export const TagBadge = (props: TagProps) => {
+    const [hovered, setHovered] = useState<boolean>(false)
+
+
     return (
         <div className=" mr-1 group relative inline-flex items-center">
-            <Badge variant="secondary" style={{ backgroundColor: props.tag.color}}>
+            <Badge 
+                variant="secondary" 
+                style={{ backgroundColor: props.tag.color}}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+            >
                 {props.tag.name}
-                {!props.cantRemove && (
+                {!props.cantRemove && hovered && (
                     <button
                         onClick={() => props.onRemove(props.tag)}
                         aria-label={`Remove ${props.tag.name}`}

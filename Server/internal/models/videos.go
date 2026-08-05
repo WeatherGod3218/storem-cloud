@@ -93,6 +93,11 @@ type ChangeVideoDescriptionRequest struct {
 	Description string `json:"description"`
 }
 
+type ChangeVideoVisibilityRequest struct {
+	RowID      string `json:"row_id"`
+	Visibility string `json:"visibility"`
+}
+
 type AccessVideoResponse struct {
 	URL   string `json:"url"`
 	Video string `json:"video"`

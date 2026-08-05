@@ -140,14 +140,11 @@ func GetVideoGroup(c *gin.Context) {
 			S3ID:              video.S3ID,
 			CustomTitle:       video.CustomTitle,
 			CustomDescription: video.CustomDescription,
+			Visibility:        video.Visibility,
 			Username:          username,
 			Filename:          video.Filename,
 			ThumbnailURL:      thumbnailURL,
 			Timestamp:         video.Timestamp,
-		}
-
-		if user != nil && user.CanViewPrivateVideos() {
-			videos[i].Visibility = video.Visibility
 		}
 	}
 
@@ -194,6 +191,46 @@ func ChangeVideoTitle(c *gin.Context) {
 
 	if err := database.ChangeVideoTitle(req.RowID, req.Title); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoTitle"}).Warning("failed to change title in database")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{})
+}
+
+// ChangeVideoDescription godoc
+//
+// @Summary      Updates a videos description
+// @Description  Updates a given videoID's description
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New Title"
+// @Success      200      {object}  models.SuccessResponse
+// @Failure      400      {object}  models.ErrorResponse
+// @Router       /api/v2/videos/description [put]
+func ChangeVideoVisibility(c *gin.Context) {
+	user := users.GetUserByToken(c.Get("User"))
+	if user == nil || !user.CanModifyVideoData() || !user.CanViewPrivateVideos() {
+		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: "You do not have permission for this action.",
+		})
+		return
+	}
+
+	var req *models.ChangeVideoVisibilityRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to bind JSON")
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: "Unable to process request!",
+		})
+		return
+	}
+
+	if err := database.ChangeVideoVisibility(req.RowID, req.Visibility); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to change description in database")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request!",
 		})
@@ -337,10 +374,9 @@ func GetVideoData(c *gin.Context) {
 		CustomTitle:       data.CustomTitle,
 		CustomDescription: data.CustomDescription,
 		Visibility:        data.Visibility,
-
-		Username: users.GetUsername(data.UserID),
-		Filename: data.Filename,
-		VideoURL: videoURL,
+		Username:          users.GetUsername(data.UserID),
+		Filename:          data.Filename,
+		VideoURL:          videoURL,
 
 		Timestamp: data.Timestamp,
 		CanModify: ((user != nil) && user.CanModifyVideoData()),
@@ -355,8 +391,10 @@ func Routes(r *gin.RouterGroup) {
 	videos.PUT("/verify", VerifyVideos)
 	videos.GET("/video/:id", GetVideoData)
 	videos.GET("/random", GetRandomVideo)
+
 	videos.POST("/group", GetVideoGroup) //TODO: REPLACE THIS WITH QUERY WHEN AVAILABLE
 
+	videos.PUT("/visibility", ChangeVideoVisibility)
 	videos.PUT("/title", ChangeVideoTitle)
 	videos.PUT("/description", ChangeVideoDescription)
 }

@@ -18,7 +18,7 @@ type VideoData = {
     custom_title?: string | null,
     custom_description?: string | null,
 
-    visibility?: string,
+    visibility: string,
 
     username: string,
     filename: string,
@@ -48,9 +48,10 @@ export const VideoPage = () => {
         navigate("/unauthorized")
     }
 
+
     const { isPending, error, data } = useQuery<VideoData, Error>({
         queryKey: [`get-video-data`, params.id],
-        retry: false,
+        retry: 3,
         queryFn: () =>
         fetch(`${ENDPOINT}/${params.id}`, {
 			method: "GET",
@@ -65,7 +66,9 @@ export const VideoPage = () => {
 
     useEffect(() => {
         if (error instanceof HttpError && error.status === 401) {
-            goToUnauthorized();
+            if (session != null) {
+                goToUnauthorized();                
+            }
         }
     }, [error]);
 

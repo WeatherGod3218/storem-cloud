@@ -3,6 +3,8 @@ import {
   CardContent,
 } from "@/components/ui/card"
 
+import { User, Eye, EyeOff } from "lucide-react"
+
 import { ScrollArea} from "@/components/ui/scroll-area"
 import {Badge} from "@/components/ui/badge"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
@@ -13,9 +15,11 @@ import { VideoDescDisplay } from "./DescriptionDisplay"
 
 import { useMediaQuery } from "@/hooks/MediaQuery"
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import { TagDisplay } from "./TagDisplay"
 import { VideoScrollBar } from "./ScrollBar/VideoScrollBar"
+import { Button } from "@base-ui/react"
+import { ChangeVisibilityPopup } from "./ChangeVisibility"
  
 type VideoData = {
     row_id: string,
@@ -24,7 +28,7 @@ type VideoData = {
     custom_title?: string | null,
     custom_description?: string | null,
 
-    visibility?: string,
+    visibility: string,
 
     username: string,
     filename: string,
@@ -54,11 +58,15 @@ const VideoPlayer = memo(({ src }: { src: string }) => (
 ));
 
 export const VideoCard = (props: VideoData) => {
+    const [visibility, setVisibility] = useState<string>(props.visibility)
+    const [visibilityMenuOpen, setVisibilityMenuOpen] = useState<boolean>(false)
+    //TODO: make a visibility display
     const isVertical = useMediaQuery("(max-width: 903px)")
     console.log(isVertical)
 
     return (
         <div className="flex w-full h-full">
+            <ChangeVisibilityPopup key={props.row_id} video_id={props.row_id} visibility={props.visibility} open={visibilityMenuOpen} setOpen={setVisibilityMenuOpen} onSelect={(newVisibility: string) => {setVisibility(newVisibility)}}/>
             <Card className={isVertical ? "bg-gray w-full flex flex-col gap-0 mx-3" : "bg-gray w-full gap-0 flex flex-row mx-3"}>
                 <div className={isVertical ? "w-full" : "h-full w-3/4"}>
                     <CardContent>
@@ -69,10 +77,22 @@ export const VideoCard = (props: VideoData) => {
                     <CardContent className={isVertical ? "pt-3" : "pt-3 h-full"}>
                         <div className="flex flex-row justify-between items-center">
                             <VideoTitleDisplay key={props.row_id} can_modify={props.can_modify} title={props.custom_title} filename={props.filename} id={props.row_id}/>
-                            <Badge variant="secondary" className="flex mr-1">{props.username}</Badge> 
                         </div>                            
                         <VideoDescDisplay key={props.row_id} can_modify={props.can_modify} description={props.custom_description} id={props.row_id}/>
-                        <TagDisplay video_id={props.row_id} can_modify={props.can_modify}/>              
+                        <div className="shrink-0 flex mr-1">
+                            <Badge variant="secondary" className=""><User/>{props.username}</Badge>
+                            {(visibility && 
+                            (
+                                <>
+                                {(props.can_modify) ? (
+                                    <Button onClick={() => {setVisibilityMenuOpen(true)}}><Badge variant="secondary" className="ml-2"> {(visibility== "Public" ? (<Eye/>) : (<EyeOff/>))}{visibility}</Badge></Button>
+                                ) : (
+                                    <Badge variant="secondary" className="ml-2"> {(visibility== "Public" ? (<Eye/>) : (<EyeOff/>))}{visibility}</Badge>
+                                )}
+                                </>
+                            ))}                           
+                        </div>
+                        <TagDisplay video_id={props.row_id} can_modify={props.can_modify}/>
                     </CardContent>
                 </div>
                 {isVertical ? ( 
