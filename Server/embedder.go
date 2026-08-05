@@ -55,23 +55,25 @@ func HandleEmbedForVideo(c *gin.Context, id string) *string {
 	}
 
 	meta := fmt.Sprintf(`
-		<meta property="og:type" content="video.other" />
+		<meta property="og:type" content="video.movie" />
 		<meta property="og:title" content="%s" />
 		<meta property="og:description" content="%s" />
 		<meta property="og:url" content="%s/videos/video/%s" />
 		<meta property="og:image" content="%s" />
+		<meta property="og:image:secure_url" content="%s">
 		<meta property="og:video" content="%s" />
 		<meta property="og:video:secure_url" content="%s" />
 		<meta property="og:video:type" content="video/mp4" />
 		<meta property="og:video:width" content="%d" />
 		<meta property="og:video:height" content="%d" />
+		<meta property="og:site_name" content="Stor'em Cloud">
+		<meta property="og:locale" content="en_US">
 	`,
 		html.EscapeString(*video.CustomTitle),
 		html.EscapeString(*video.CustomDescription),
 		serverHost, id,
-		thumbnailURL,
-		videoURL,
-		videoURL,
+		thumbnailURL, thumbnailURL,
+		videoURL, videoURL,
 		1920, 1080,
 	)
 

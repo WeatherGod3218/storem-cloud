@@ -36,18 +36,19 @@ func serveIcon(c *gin.Context, icon []byte) {
 }
 
 func serveFrontend(c *gin.Context) {
-	finalIndex := &indexBuffer
+	var metaData *string
 
 	if strings.HasPrefix(c.Request.URL.Path, "/video/") {
 		id := strings.TrimPrefix(c.Request.URL.Path, "/video/")
-		finalIndex = HandleEmbedForVideo(c, id)
+		metaData = HandleEmbedForVideo(c, id)
 	}
 
-	if finalIndex == nil {
+	if metaData == nil {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(indexBuffer))
 		return
 	}
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(*finalIndex))
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(strings.Replace(indexBuffer, "<!--SSR_META-->", *metaData, 1)))
 }
 
 func chooseRouter() *gin.Engine {
