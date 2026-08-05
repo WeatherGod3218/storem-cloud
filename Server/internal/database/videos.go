@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/models"
 	"github.com/WeatherGod3218/weather-reels-server/internal/users"
 )
@@ -142,7 +141,6 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
 	if hasMore {
-		logging.Logger.Info("does not have more!")
 		videos = videos[:(MAX_ROW_AMOUNT * 3)]
 	}
 	return videos, hasMore, nil

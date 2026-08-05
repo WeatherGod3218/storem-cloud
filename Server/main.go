@@ -35,14 +35,10 @@ func serveIcon(c *gin.Context, icon []byte) {
 	c.Data(http.StatusOK, "image/png", icon)
 }
 
-func newIndexFile(metadata string) *string {
-	newFile := strings.Replace(indexBuffer, "<!--SSR_META-->", metadata, 1)
-	return &newFile
-}
-
 func serveFrontend(c *gin.Context) {
 	finalIndex := &indexBuffer
-	if strings.HasPrefix(c.FullPath(), "/videos/video/") {
+
+	if strings.HasPrefix(c.Request.URL.Path, "/video/") {
 		finalIndex = HandleEmbedForVideo(c)
 	}
 
@@ -51,6 +47,14 @@ func serveFrontend(c *gin.Context) {
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(*finalIndex))
+}
+
+func chooseRouter() *gin.Engine {
+	if os.Getenv("DEV_MODE") == "true" {
+		return gin.Default()
+	}
+
+	return gin.New()
 }
 
 // @title WeatherReels
@@ -112,7 +116,8 @@ func main() {
 		logging.Logger.Fatal("No favicon?")
 	}
 
-	router := gin.Default()
+	router := chooseRouter()
+
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, models.SuccessResponse{
 			Success: true,
