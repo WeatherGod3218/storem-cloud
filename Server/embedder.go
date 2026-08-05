@@ -15,8 +15,7 @@ import (
 
 var DEFAULT_DESCRIPTION string = "No description has been applied to this video."
 
-func HandleEmbedForVideo(c *gin.Context) *string {
-	id := c.Param("id")
+func HandleEmbedForVideo(c *gin.Context, id string) *string {
 	serverHost := os.Getenv("SERVER_HOST")
 
 	if id == "" {

@@ -39,7 +39,8 @@ func serveFrontend(c *gin.Context) {
 	finalIndex := &indexBuffer
 
 	if strings.HasPrefix(c.Request.URL.Path, "/video/") {
-		finalIndex = HandleEmbedForVideo(c)
+		id := strings.TrimPrefix(c.Request.URL.Path, "/video/")
+		finalIndex = HandleEmbedForVideo(c, id)
 	}
 
 	if finalIndex == nil {
