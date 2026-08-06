@@ -29,7 +29,6 @@ function useVideoGroup(props: VideoScrollBarProps) {
 	const { filter } = useFilter()
 
 	const [filterElement, setFilterElement] = useState(filter.filter_element)
-	const [scrambled, setScrambled] = useState(false)
 
     const [videos, setVideos] = useState<Video[]>([]);
     const [cursor, setCursor] = useState<Cursor | null>(props.cursor || null);
@@ -89,7 +88,10 @@ function useVideoGroup(props: VideoScrollBarProps) {
 	useEffect(() => {
 		if (filter.filter_element != filterElement) {
 			resetVideos(true)
-		}
+			setFilterElement(filter.filter_element)
+			return
+		}		
+		setFilterElement(filter.filter_element)
 		resetVideos(false)
 	}, [filter]);
 
@@ -99,7 +101,6 @@ function useVideoGroup(props: VideoScrollBarProps) {
 export const VideoScrollBar = (props: VideoScrollBarProps) => {
     const { videos, loadMore, hasMore, loading, error } = useVideoGroup(props);
     const [isIntersecting, setIsIntersecting] = useState(false);
-	const { filter } = useFilter()
 
     const sentinelRef = useRef(null);
 
