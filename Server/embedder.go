@@ -29,6 +29,10 @@ func HandleEmbedForVideo(c *gin.Context, id string) *string {
 		return nil
 	}
 
+	if video.Visibility != "Public" {
+		return nil
+	}
+
 	videoURL, err := redis.GetPresignedURL(video.S3ID, redis.Video)
 	if err != nil {
 		videoURL, err = s3.CreateGetPresignedVideoURL(video.S3ID)

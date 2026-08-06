@@ -1,8 +1,10 @@
 import { Header } from "@/components/Header"
+import useDocumentTitle from "@/hooks/DocumentTitle"
 
 export const UnauthorizedPage = () => {
+    useDocumentTitle("UNAUTHORIZED")
 
-    return (
+    return (            
         <div>
             <Header/>
             <div className="w-full h-screen flex justify-center">

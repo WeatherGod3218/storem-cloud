@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ScrollBarThumbnail } from "./ScrollBarThumbnail";
 import { useAuth } from "@/context/AuthContext";
+import { useFilter } from "@/context/FilterContext";
 
 const ENDPOINT = "/api/v2/videos/group";
 
@@ -25,6 +26,11 @@ type VideoScrollBarProps = {
 
 function useVideoGroup(props: VideoScrollBarProps) {
 	const {session, authLoading} = useAuth()
+	const { filter } = useFilter()
+
+	const [filterElement, setFilterElement] = useState(filter.filter_element)
+	const [scrambled, setScrambled] = useState(false)
+
     const [videos, setVideos] = useState<Video[]>([]);
     const [cursor, setCursor] = useState<Cursor | null>(props.cursor || null);
     const [hasMore, setHasMore] = useState(true);
@@ -32,6 +38,12 @@ function useVideoGroup(props: VideoScrollBarProps) {
     const [error, setError] = useState<string | null>(null);
     const hasLoadedOnce = useRef(false);
 
+
+	function resetVideos(setNull: boolean) {
+		setCursor((props.cursor && !setNull) ? props.cursor : null)
+		setHasMore(true)
+		setVideos([])
+	}
 
   	const loadMore = useCallback(async () => {
 		console.log(`Auth: ${authLoading}`)
@@ -43,7 +55,7 @@ function useVideoGroup(props: VideoScrollBarProps) {
 		setLoading(true);
 		setError(null);
 
-		const payload = {"row_id": cursor?.row_id, "timestamp":cursor?.timestamp, "order_ascending": false}
+		const payload = {"row_id": cursor?.row_id, "timestamp":cursor?.timestamp, "filter": filter}
 
 		try {
 			const res = await fetch(`${ENDPOINT}`, {
@@ -74,12 +86,20 @@ function useVideoGroup(props: VideoScrollBarProps) {
 		loadMore();
 	}, []);
 
+	useEffect(() => {
+		if (filter.filter_element != filterElement) {
+			resetVideos(true)
+		}
+		resetVideos(false)
+	}, [filter]);
+
   	return { videos, loadMore, hasMore, loading, error };
 }
 
 export const VideoScrollBar = (props: VideoScrollBarProps) => {
     const { videos, loadMore, hasMore, loading, error } = useVideoGroup(props);
     const [isIntersecting, setIsIntersecting] = useState(false);
+	const { filter } = useFilter()
 
     const sentinelRef = useRef(null);
 
@@ -129,7 +149,11 @@ export const VideoScrollBar = (props: VideoScrollBarProps) => {
 
 		<div className="w-full px-3 grid grid-cols-1">
 			{videos.map((video) => (
-				<ScrollBarThumbnail key={video.row_id} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+				<Fragment key={video.row_id}>
+				{(video.row_id != props.cursor?.row_id) &&
+					<ScrollBarThumbnail key={video.row_id} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+				}
+				</Fragment>
 			))}
 		</div>
 

@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"time"
 
+	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
 type URLTypes string
@@ -16,6 +19,21 @@ const (
 	Video     URLTypes = "video"
 	Thumbnail URLTypes = "thumbnail"
 )
+
+const MAX_TTL = time.Minute * 10
+const MIN_TTL = time.Minute * 1
+
+func getRandomTTL() time.Duration {
+	ttlRange := MAX_TTL - MIN_TTL
+	if ttlRange < 0 {
+		logging.Logger.WithFields(logrus.Fields{"max": MAX_TTL, "min": MIN_TTL}).Warn("Invalid Redis Time Configuration!")
+		return time.Minute * 2
+	}
+
+	randDuration := rand.N(ttlRange)
+
+	return randDuration + MIN_TTL
+}
 
 func refreshKeyVal(itemKey string, ver URLTypes) (string, error) {
 	var newUrl string
@@ -67,10 +85,7 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 			return "", err
 		}
 
-		ttl := s3.GetPresignURLTime() - 5*time.Minute
-		if ttl <= 0 {
-			ttl = s3.GetPresignURLTime()
-		}
+		ttl := getRandomTTL()
 
 		if err := client.Set(ctx, cacheKey, newURL, ttl).Err(); err != nil {
 			return "", err

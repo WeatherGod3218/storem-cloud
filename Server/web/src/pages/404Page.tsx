@@ -1,10 +1,11 @@
 import { Header } from "@/components/Header"
+import useDocumentTitle from "@/hooks/DocumentTitle"
 
 export const NotFoundPage = () => {
-
+    useDocumentTitle("404 Not Found")
+    
     return (
         <div>
-            <title> Test </title>
             <Header/>
             <div className="w-full h-screen flex justify-center">
                 <div className="flex flex-col min-h-0 w-full">

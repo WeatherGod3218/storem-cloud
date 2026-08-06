@@ -14,10 +14,10 @@ import {
 
 import { LandingPage } from './pages/LandingPage.tsx';
 import { VideoPage } from './pages/VideoPage.tsx';
-import { TestPage } from './pages/TestPage.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import { UnauthorizedPage } from './pages/UnauthorizedPage.tsx';
 import { NotFoundPage } from './pages/404Page.tsx';
+import { FilterProvider } from './context/FilterContext.tsx';
 
 
 const queryProvider = new QueryClient()
@@ -25,21 +25,22 @@ const queryProvider = new QueryClient()
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<AuthProvider>
-			<QueryClientProvider client={queryProvider}>
-				<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">	
-					<BrowserRouter>
-						<Routes>
-								<Route path="" element={<LandingPage/>}/>
-								<Route path="/" element={<LandingPage/>}/>
-								<Route path="/video/:id" element={<VideoPage/>}/>
-								<Route path="/test" element={<TestPage/>}/>
-								<Route path="/unauthorized" element={<UnauthorizedPage/>}/>								
-								<Route path="/login" element={<LoginPage/>}/>			
-								<Route path="*" element={<NotFoundPage/>}/>
-						</Routes>
-					</BrowserRouter>
-				</ThemeProvider>
-			</QueryClientProvider>
+		<FilterProvider>
+		<QueryClientProvider client={queryProvider}>
+		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">	
+			<BrowserRouter>
+				<Routes>
+						<Route path="" element={<LandingPage/>}/>
+						<Route path="/" element={<LandingPage/>}/>
+						<Route path="/video/:id" element={<VideoPage/>}/>
+						<Route path="/unauthorized" element={<UnauthorizedPage/>}/>								
+						<Route path="/login" element={<LoginPage/>}/>			
+						<Route path="*" element={<NotFoundPage/>}/>
+				</Routes>
+			</BrowserRouter>
+		</ThemeProvider>
+		</QueryClientProvider>
+		</FilterProvider>
 		</AuthProvider>	
   </StrictMode>
 )

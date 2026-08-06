@@ -12,7 +12,7 @@ type GetVideoGroupPart struct {
 	Visibility string `json:"visibility"`
 
 	UserId       string `json:"user_id"`
-	Timestamp    int64  `json:"timestamp"`
+	Timestamp    any    `json:"timestamp"`
 	ThumbnailURL string `json:"thumbnail"`
 	Filename     string `json:"filename"`
 }
@@ -29,18 +29,12 @@ type GetVideoGroupPartResponse struct {
 	Username     string `json:"username"`
 	Filename     string `json:"filename"`
 	ThumbnailURL string `json:"thumbnail"`
-	Timestamp    int64  `json:"timestamp"`
+	Timestamp    any    `json:"timestamp"`
 }
 
 type GetVideoGroupCursor struct {
-	Timestamp int64  `json:"timestamp"`
+	Timestamp any    `json:"timestamp"`
 	RowID     string `json:"row_id"`
-}
-
-type GetVideoGroupRequest struct {
-	Timestamp      *int64  `json:"timestamp"`
-	RowID          *string `json:"row_id"`
-	OrderAscending bool    `json:"order_ascending"`
 }
 
 type GetVideoDataResponse struct {
@@ -58,7 +52,7 @@ type GetVideoDataResponse struct {
 	VideoURL     string `json:"video_url"`
 	ThumbnailURL string `json:"thumbnail_url"`
 
-	Timestamp int64 `json:"timestamp"`
+	Timestamp any `json:"timestamp"`
 
 	CanModify bool `json:"can_modify"`
 }
@@ -74,7 +68,13 @@ type GetVideoDataDatabase struct {
 
 	UserID    string `json:"user_id"`
 	Filename  string `json:"filename"`
-	Timestamp int64  `json:"timestamp"`
+	Timestamp any    `json:"timestamp"`
+}
+
+type GetVideoGroupRequest struct {
+	Timestamp *any    `json:"timestamp"`
+	RowID     *string `json:"row_id"`
+	Filters   Filter  `json:"filter"`
 }
 
 type GetVideoGroupResponse struct {

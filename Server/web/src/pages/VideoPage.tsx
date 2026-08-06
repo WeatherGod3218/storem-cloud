@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext"
 //import { useMediaQuery } from "@/hooks/MediaQuery";
 import { useNavigate } from "react-router"
 import { useEffect } from "react"
+import useDocumentTitle from "@/hooks/DocumentTitle"
 
 const ENDPOINT = "/api/v2/videos/video";
 
@@ -44,6 +45,7 @@ class HttpError extends Error {
 export const VideoPage = () => {   
 	const { session, authLoading} = useAuth()
     let params = useParams()
+
     const navigate = useNavigate()
 
     const goToUnauthorized = () => {
@@ -73,6 +75,8 @@ export const VideoPage = () => {
             }
         }
     }, [error]);
+
+    useDocumentTitle((data ? (data.custom_title ? data.custom_title : data.filename) : "Loading..."))
 
     return (
         <div className="w-full h-screen flex flex-col">

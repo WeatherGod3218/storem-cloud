@@ -14,5 +14,5 @@ func GetRegion() string {
 }
 
 func GetPresignURLTime() time.Duration {
-	return (45 * time.Minute)
+	return (48 * time.Hour)
 }
