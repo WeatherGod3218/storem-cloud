@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"time"
 
 	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
 	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
 type URLTypes string
@@ -18,6 +20,39 @@ const (
 	Thumbnail URLTypes = "thumbnail"
 )
 
+const MAX_TTL = time.Minute * 10
+const MIN_TTL = time.Minute * 1
+
+func getRandomTTL() time.Duration {
+	ttlRange := MAX_TTL - MIN_TTL
+	if ttlRange < 0 {
+		logging.Logger.WithFields(logrus.Fields{"max": MAX_TTL, "min": MIN_TTL}).Warn("Invalid Redis Time Configuration!")
+		return time.Minute * 2
+	}
+
+	randDuration := rand.N(ttlRange)
+
+	return randDuration + MIN_TTL
+}
+
+func refreshKeyVal(itemKey string, ver URLTypes) (string, error) {
+	var newUrl string
+	var err error
+	switch ver {
+	case Thumbnail:
+		newUrl, err = s3.GetThumbnailPresignedURL(itemKey)
+	case Video:
+		newUrl, err = s3.CreateGetPresignedVideoURL(itemKey)
+	default:
+		return "", fmt.Errorf("unknown url type %s", ver)
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return newUrl, nil
+}
+
 func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	if !RedisInitalized {
 		return "", errors.New("redis was not intialized")
@@ -26,7 +61,6 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	defer cancel()
 
 	cacheKey := fmt.Sprintf("presigned:%s%s", ver, s3Key)
-	logging.Logger.Info(cacheKey)
 
 	url, err := client.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -46,30 +80,18 @@ func GetPresignedURL(s3Key string, ver URLTypes) (string, error) {
 	if setLock {
 		defer client.Del(ctx, lockKey)
 
-		var newUrl string
-		var err error
-		switch ver {
-		case Thumbnail:
-			newUrl, err = s3.GetThumbnailPresignedURL(s3Key)
-		case Video:
-			newUrl, err = s3.CreateGetPresignedVideoURL(s3Key)
-		default:
-			return "", fmt.Errorf("unknown url type %s", ver)
-		}
+		newURL, err := refreshKeyVal(s3Key, ver)
 		if err != nil {
 			return "", err
 		}
 
-		ttl := s3.GetPresignURLTime() - 5*time.Minute
-		if ttl <= 0 {
-			ttl = s3.GetPresignURLTime()
-		}
+		ttl := getRandomTTL()
 
-		if err := client.Set(ctx, cacheKey, newUrl, ttl).Err(); err != nil {
+		if err := client.Set(ctx, cacheKey, newURL, ttl).Err(); err != nil {
 			return "", err
 		}
 
-		return newUrl, nil
+		return newURL, nil
 	}
 
 	//IM BACK ON MY BULLSHITTTTT

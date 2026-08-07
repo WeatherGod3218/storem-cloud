@@ -32,7 +32,9 @@ type VideoData = {
 
     username: string,
     filename: string,
+
     video_url: string,
+    thumbnail_url: string,
 
     timestamp: number,
     can_modify: boolean
@@ -44,13 +46,14 @@ type VideoData = {
 //   return text.length > DESCRIPTION_MAX_CHAR ? text.slice(0, DESCRIPTION_MAX_CHAR) : text;
 // }
 
-const VideoPlayer = memo(({ src }: { src: string }) => (
+const VideoPlayer = memo(({ src, thumbnail }: { src: string, thumbnail: string }) => (
     
     <video
         className="w-full h-full rounded-md object-cover"
         src={src}
         controls
         autoPlay
+        poster={thumbnail}
         preload="auto"
     > 
         Your browser does not support the video tag.
@@ -71,7 +74,7 @@ export const VideoCard = (props: VideoData) => {
                 <div className={isVertical ? "w-full" : "h-full w-3/4"}>
                     <CardContent>
                         <AspectRatio ratio={16 / 9} className="w-full">
-                            <VideoPlayer src={props.video_url}/> 
+                            <VideoPlayer src={props.video_url} thumbnail={props.thumbnail_url}/> 
                         </AspectRatio>
                     </CardContent>
                     <CardContent className={isVertical ? "pt-3" : "pt-3 h-full"}>

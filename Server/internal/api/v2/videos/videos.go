@@ -352,12 +352,13 @@ func GetVideoData(c *gin.Context) {
 	}
 
 	var videoURL string
+	var thumbnailURL string
 
 	videoURL, err = redis.GetPresignedURL(data.S3ID, redis.Video)
 	if err != nil {
 		videoURL, err = s3.CreateGetPresignedVideoURL(data.S3ID)
 		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video data")
+			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video url")
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
 				Error: "Unable to process request!",
 			})
@@ -365,7 +366,17 @@ func GetVideoData(c *gin.Context) {
 		}
 	}
 
-	logging.Logger.Info(videoURL)
+	thumbnailURL, err = redis.GetPresignedURL(data.S3ID, redis.Thumbnail)
+	if err != nil {
+		thumbnailURL, err = s3.GetThumbnailPresignedURL(data.S3ID)
+		if err != nil {
+			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoData"}).Warning("failed get video thumbnail url")
+			c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Error: "Unable to process request!",
+			})
+			return
+		}
+	}
 
 	resp := models.GetVideoDataResponse{
 		RowID: data.RowID,
@@ -376,7 +387,9 @@ func GetVideoData(c *gin.Context) {
 		Visibility:        data.Visibility,
 		Username:          users.GetUsername(data.UserID),
 		Filename:          data.Filename,
-		VideoURL:          videoURL,
+
+		ThumbnailURL: thumbnailURL,
+		VideoURL:     videoURL,
 
 		Timestamp: data.Timestamp,
 		CanModify: ((user != nil) && user.CanModifyVideoData()),

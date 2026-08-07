@@ -3,11 +3,9 @@ import {
 	useMutation,
 } from '@tanstack/react-query'
 
-import { Button } from "@/components/ui/button"
-import { ArrowUpAZ, ArrowUpZA } from "lucide-react"
-
 import { ThumbnailCard, ThumbnailSkeletonCard } from "./Thumbnails/ThumbnailCard";
 import { useAuth } from "@/context/AuthContext";
+import { useFilter } from "@/context/FilterContext";
 
 
 const ENDPOINT = "/api/v2/videos/group";
@@ -38,16 +36,16 @@ type VideoData = {
 type VideoFetch = {
 	row_id?: string, 
 	timestamp?: string,
-	order_ascending: boolean
+	filter: any
 }
 
 function useVideoGroup() {
 	const { session, authLoading} = useAuth()
+	const { filter } = useFilter()
     const [videos, setVideos] = useState<Video[]>([]);
     const [cursor, setCursor] = useState<Cursor | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
-	const [newestFirst, setNewestFirst] = useState(true)
     const [error, setError] = useState<string | null>(null);
     const hasLoadedOnce = useRef(false);
 
@@ -95,11 +93,15 @@ function useVideoGroup() {
 		const payload = {
 			"row_id": cursor?.row_id, 
 			"timestamp": cursor?.timestamp,
-			"order_ascending": !newestFirst, //oops
+			"filter": filter
 		}
 
 		getVideos.mutate(payload)
-	}, [cursor, hasMore, loading, authLoading]);
+	}, [cursor, hasMore, loading, authLoading, filter]);
+
+	useEffect(() => {
+		resetVideos()
+	}, [filter]);
 
 	useEffect(() => {
 		if (hasLoadedOnce.current) return;
@@ -107,11 +109,14 @@ function useVideoGroup() {
 		loadMore();
 	}, []);
 
-  	return { videos, newestFirst, setNewestFirst, loadMore, hasMore, loading, error, resetVideos};
+  	return { videos, loadMore, hasMore, loading, error, resetVideos};
 }
 
 export default function VideoGridInfinite() {
-    const { videos, loadMore, hasMore, loading, newestFirst, setNewestFirst, error, resetVideos } = useVideoGroup();
+    const { authLoading} = useAuth()
+	const { filter } = useFilter()
+
+	const { videos, loadMore, hasMore, loading, error } = useVideoGroup();
     const [isIntersecting, setIsIntersecting] = useState(false);
 
     const sentinelRef = useRef(null);
@@ -140,11 +145,16 @@ export default function VideoGridInfinite() {
         return () => observer.disconnect();
     }, []);
 
+	const isAlphabetical =
+	filter.filter_element === "title" || filter.filter_element === "filename";
 
-	function changeAscensionOrder() {
-		setNewestFirst(!newestFirst)		
-		resetVideos()
-	}
+	const sortLabel = isAlphabetical
+	? filter.filter_direction === "ascending"
+		? "Videos A-Z"
+		: "Videos Z-A"
+	: filter.filter_direction === "ascending"
+		? "Oldest First"
+		: "Newest First";
 
   	return (
     <div className="min-h-screen bg-dark p-8">
@@ -152,11 +162,20 @@ export default function VideoGridInfinite() {
 			<div className="mb-6">
 				<h1 className="text-xl font-semibold text-slate-200">Videos</h1>
 				<div className="flex flex-row items-center">					
-					<Button variant="outline" size="icon-sm" aria-label="Confirm Title" onClick={changeAscensionOrder}>{ newestFirst ? <ArrowUpAZ/> : <ArrowUpZA/>}</Button>
-					<p className="pl-1 text-l text-slate-500">{ newestFirst ? "Newest First" : "Oldest First"}</p>
+					<p className="pl-1 text-l text-slate-500"> {sortLabel} </p>
 				</div>
 			</div>
-
+			{error && (
+				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
+					<span>Couldn't load videos: {error}</span>
+					<button
+					onClick={loadMore}
+					className="ml-auto text-red-700 underline underline-offset-2 hover:text-red-800"
+					>
+					Retry
+					</button>
+				</div>
+			)}
 			{error && (
 				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
 					<span>Couldn't load videos: {error}</span>
@@ -169,7 +188,12 @@ export default function VideoGridInfinite() {
 				</div>
 			)}
 
-			{videos.length === 0 && !loading && !error && (
+			{ (authLoading) &&
+				<div className="text-center py-16 text-slate-500 text-sm">
+					Loading Videos. Please Wait.
+				</div>				
+			}
+			{videos.length === 0 && !authLoading && !loading && !error && (
 				<div className="text-center py-16 text-slate-500 text-sm">
 					No videos yet.
 				</div>
@@ -177,7 +201,7 @@ export default function VideoGridInfinite() {
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				{videos.map((video) => (
-					<ThumbnailCard key={video.row_id} visibility={video.visibility} rowId={video.row_id} customTitle={video.custom_title} customDescription={video.custom_description} filename={video.filename} username={video.username} thumbnail={video.thumbnail} />
+					<ThumbnailCard key={video.row_id} {...video} />
 				))}
 				{loading && Array.from({ length: 6 }).map((_, i) => <ThumbnailSkeletonCard key={`sk-${i}`} />)}
 			</div>

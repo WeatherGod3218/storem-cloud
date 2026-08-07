@@ -132,6 +132,9 @@ export default function LoginPage() {
   // Show login form
   return (
     <div>
+      <title>Login</title>
+      <meta name="description" content="Login Page for the Stor'em Cloud Video Player Application"></meta>
+
       <h1>Supabase + React</h1>
       <p>Sign in via magic link with your email below</p>
       <form onSubmit={handleLogin}>

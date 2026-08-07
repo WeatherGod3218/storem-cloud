@@ -12,6 +12,11 @@ var Logger *logrus.Logger = makeLogger()
 
 func makeLogger() *logrus.Logger {
 	level := logrus.InfoLevel
+
+	if os.Getenv("GIN_MODE") == "release" {
+		level = logrus.WarnLevel
+	}
+
 	if testing.Testing() {
 		level = logrus.DebugLevel
 	}

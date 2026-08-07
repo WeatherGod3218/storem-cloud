@@ -29,12 +29,34 @@ import (
 //go:embed web/dist
 var distFS embed.FS
 
+var indexBuffer string = ""
+
 func serveIcon(c *gin.Context, icon []byte) {
 	c.Data(http.StatusOK, "image/png", icon)
 }
 
-func serveFrontend(c *gin.Context, index []byte) {
-	c.Data(http.StatusOK, "text/html; charset=utf-8", index)
+func serveFrontend(c *gin.Context) {
+	var metaData *string
+
+	if strings.HasPrefix(c.Request.URL.Path, "/video/") {
+		id := strings.TrimPrefix(c.Request.URL.Path, "/video/")
+		metaData = HandleEmbedForVideo(c, id)
+	}
+
+	if metaData == nil {
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(indexBuffer))
+		return
+	}
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(strings.Replace(indexBuffer, "<!--SSR_META-->", *metaData, 1)))
+}
+
+func chooseRouter() *gin.Engine {
+	if os.Getenv("DEV_MODE") == "true" {
+		return gin.Default()
+	}
+
+	return gin.New()
 }
 
 // @title WeatherReels
@@ -89,13 +111,15 @@ func main() {
 	if err != nil {
 		logging.Logger.Fatalf("failed to load index %s", err)
 	}
+	indexBuffer = string(index)
 
 	icon, err := fs.ReadFile(dist, "favicon.png")
 	if err != nil {
 		logging.Logger.Fatal("No favicon?")
 	}
 
-	router := gin.Default()
+	router := chooseRouter()
+
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, models.SuccessResponse{
 			Success: true,
@@ -148,7 +172,7 @@ func main() {
 				})
 				return
 			}
-			serveFrontend(c, index)
+			serveFrontend(c)
 		})
 	}
 

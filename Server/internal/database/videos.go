@@ -73,32 +73,86 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 	args := make([]any, 0)
 
-	baseQuery := `
-		SELECT row_id, s3_id, custom_title, custom_description, visibility, user_id, filename, file_mod_date FROM videos WHERE status = 'Complete'
-	`
+	logging.Logger.Info(options.Filters.FilterElement)
 
-	if (user == nil) || !user.CanViewPrivateVideos() {
-		baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
+	var sortingElement string
+	switch options.Filters.FilterElement {
+	case models.Title:
+		sortingElement = "custom_title"
+	case models.Filename:
+		sortingElement = "filename"
+	case models.DateCreated:
+		sortingElement = "file_mod_date"
+	case models.DateUploaded:
+		sortingElement = "uploaded_at"
+	default:
+		return nil, false, fmt.Errorf("failed to find correct filter %s", options.Filters.FilterElement)
+	}
+
+	baseQuery := fmt.Sprintf(`
+		SELECT row_id, s3_id, custom_title, custom_description, visibility, user_id, filename, %s FROM videos WHERE status = 'Complete'
+	`, sortingElement)
+
+	if len(options.Filters.FilterTags) > 0 {
+		args = append(args, options.Filters.FilterTags)
+		baseQuery = fmt.Sprintf(`
+        SELECT DISTINCT
+            v.row_id,
+			v.s3_id,
+			v.custom_title,
+			v.custom_description,
+			v.visibility,
+			v.user_id,
+			v.filename,
+			v.%s
+        FROM videos v
+        JOIN video_tags vt ON vt.video_id = v.row_id
+        WHERE vt.tag_id = ANY($%d)
+		AND status = 'Complete'	
+		`, sortingElement, len(args))
+		if (user == nil) || !user.CanViewPrivateVideos() {
+			baseQuery = fmt.Sprintf("%s AND v.visibility = 'Public'", baseQuery)
+		}
+
+		if options.Filters.Title != nil {
+			args = append(args, "%"+*options.Filters.Title+"%")
+			baseQuery = fmt.Sprintf("%s AND v.custom_title ILIKE $%d", baseQuery, len(args))
+		}
+	} else {
+		if (user == nil) || !user.CanViewPrivateVideos() {
+			baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
+		}
+		if options.Filters.Title != nil {
+			args = append(args, "%"+*options.Filters.Title+"%")
+			baseQuery = fmt.Sprintf("%s AND custom_title ILIKE $%d", baseQuery, len(args))
+		}
 	}
 
 	cmp := "<"
-	if options.OrderAscending {
+	keyWord := "DESC"
+	if options.Filters.FilterDirection == models.Ascending {
 		cmp = ">"
+		keyWord = "ASC"
 	}
 
 	if options.Timestamp != nil && options.RowID != nil && *options.RowID != "" {
-		args = append(args, time.Unix(*options.Timestamp, 0))
+		switch v := (*options.Timestamp).(type) {
+		case int64:
+			args = append(args, time.Unix(v, 0))
+		case float64:
+			args = append(args, time.Unix(int64(v), 0))
+		case string:
+			args = append(args, v)
+		default:
+			return nil, false, fmt.Errorf("unsupported timestamp type %T", v)
+		}
+
 		args = append(args, options.RowID)
-		baseQuery = fmt.Sprintf("%s AND (file_mod_date, row_id) %s ($%d, $%d)", baseQuery, cmp, len(args)-1, len(args))
+		baseQuery = fmt.Sprintf("%s AND (%s, row_id) %s ($%d, $%d)", baseQuery, sortingElement, cmp, len(args)-1, len(args))
 	}
 
-	if options.OrderAscending == true {
-		baseQuery = fmt.Sprintf("%s ORDER BY file_mod_date ASC, row_id ASC", baseQuery)
-	} else {
-		baseQuery = fmt.Sprintf("%s ORDER BY file_mod_date DESC, row_id DESC", baseQuery)
-	}
+	baseQuery = fmt.Sprintf("%s ORDER BY %s %s, row_id %s", baseQuery, sortingElement, keyWord, keyWord)
 
-	//add limit
 	args = append(args, (MAX_ROW_AMOUNT*3)+1)
 	baseQuery = fmt.Sprintf("%s LIMIT $%d", baseQuery, len(args))
 
@@ -118,11 +172,15 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 			visibility  string
 			userId      string
 			filename    string
-			timestamp   time.Time
+			timestamp   any
 		)
 
 		if err := rows.Scan(&rowId, &s3Id, &customTitle, &customDesc, &visibility, &userId, &filename, &timestamp); err != nil {
 			return nil, false, err
+		}
+
+		if t, ok := (timestamp).(time.Time); ok {
+			timestamp = t.Unix()
 		}
 
 		videos = append(videos, models.GetVideoGroupPart{
@@ -133,7 +191,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 			Visibility:        visibility,
 			UserId:            userId,
 			Filename:          filename,
-			Timestamp:         timestamp.Unix(),
+			Timestamp:         timestamp,
 		})
 	}
 	if err := rows.Err(); err != nil {
@@ -142,7 +200,6 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
 	if hasMore {
-		logging.Logger.Info("does not have more!")
 		videos = videos[:(MAX_ROW_AMOUNT * 3)]
 	}
 	return videos, hasMore, nil
