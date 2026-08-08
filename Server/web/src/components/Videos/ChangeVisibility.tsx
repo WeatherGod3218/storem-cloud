@@ -90,7 +90,6 @@ export const ChangeVisibilityPopup = (props: VisibilityProps) => {
 
     function setVideoVisibility(newVisibility: string) {
         if (newVisibility === visibility) {
-            console.log("doing this!")
             return
         }
 

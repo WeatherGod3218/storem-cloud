@@ -18,6 +18,7 @@ import LoginPage from './pages/LoginPage.tsx';
 import { UnauthorizedPage } from './pages/UnauthorizedPage.tsx';
 import { NotFoundPage } from './pages/404Page.tsx';
 import { FilterProvider } from './context/FilterContext.tsx';
+import { ActionsPage } from './pages/ActionsPage.tsx';
 
 
 const queryProvider = new QueryClient()
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')!).render(
 				<Routes>
 						<Route path="" element={<LandingPage/>}/>
 						<Route path="/" element={<LandingPage/>}/>
+						<Route path="/actions" element={<ActionsPage/>}/>
 						<Route path="/video/:id" element={<VideoPage/>}/>
 						<Route path="/unauthorized" element={<UnauthorizedPage/>}/>								
 						<Route path="/login" element={<LoginPage/>}/>			

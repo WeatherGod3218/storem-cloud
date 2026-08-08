@@ -13,6 +13,8 @@ type User struct {
 	DisplayName  string   `yaml:"displayName"`
 	TotalStorage int      `yaml:"totalStorageGB"`
 	Role         string   `yaml:"role"`
+	Email        string   `yaml:"email"`
+	SubjectID    string   `yaml:"subjectId"`
 }
 
 var UsersById map[string]*User = make(map[string]*User)
@@ -51,6 +53,11 @@ func GetUserByEmail(email string) (*User, bool) {
 	return user, ok
 }
 
+func GetUserByAccessId(id string) (*User, bool) {
+	user, ok := UsersById[id]
+	return user, ok
+}
+
 func GetUserByToken(token any, exists bool) *User {
 	if !exists {
 		return nil
@@ -70,6 +77,9 @@ func GetUserByToken(token any, exists bool) *User {
 		logging.Logger.Infof("Got User! %s %s", *userToken.SubjectId, *userToken.Email)
 	}
 
+	userStruct.SubjectID = *userToken.SubjectId
+	userStruct.Email = *userToken.Email
+
 	return userStruct
 }
 
@@ -82,6 +92,7 @@ func (user *User) CanModifyVideoData() bool {
 	}
 }
 
+// todo ig?
 func (user *User) CanViewVideo(video *models.GetVideoDataDatabase) bool {
 	switch strings.ToLower(user.Role) {
 	case "owner", "admin":
@@ -92,6 +103,15 @@ func (user *User) CanViewVideo(video *models.GetVideoDataDatabase) bool {
 }
 
 func (user *User) CanViewPrivateVideos() bool {
+	switch strings.ToLower(user.Role) {
+	case "owner", "admin":
+		return true
+	default:
+		return false
+	}
+}
+
+func (user *User) CanViewAuditLogs() bool {
 	switch strings.ToLower(user.Role) {
 	case "owner", "admin":
 		return true

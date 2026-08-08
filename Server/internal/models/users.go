@@ -1,5 +1,9 @@
 package models
 
+type GetUserInfoResponse struct {
+	Role    string `json:"role"`
+	Actions bool   `json:"actions"`
+}
 type UserToken struct {
 	Validated bool    `json:"validated"`
 	SubjectId *string `json:"sub"`

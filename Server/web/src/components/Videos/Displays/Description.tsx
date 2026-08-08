@@ -7,7 +7,8 @@ import { CardDescription } from "@/components/ui/card"
 import { useState } from "react"
 
 import {
-  useMutation
+  useMutation,
+  useQueryClient
 } from '@tanstack/react-query'
 import { useAuth } from "@/context/AuthContext"
 
@@ -24,7 +25,8 @@ export const VideoDescDisplay = (props: VideoDataProps) => {
     const { session, authLoading } = useAuth()
     const [isUpdating, setUpdating] = useState(false)
     const [desc, setDesc] = useState(props.description ? props.description : DEFAULT_DESCRIPTION)
-    
+    const queryClient = useQueryClient()
+
     const updateDescRequest = useMutation<null, Error, {row_id: string, description: string}>({
 		mutationKey: [`update-video-description`, props.id],
 		mutationFn: (payload: any) =>
@@ -42,6 +44,11 @@ export const VideoDescDisplay = (props: VideoDataProps) => {
 		onError: (err) => {
 			console.log(err)			
 		},
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [`get-video-data`, props.id]
+            })
+        },
 		onSettled: () => {
 			setUpdating(false)
 		}

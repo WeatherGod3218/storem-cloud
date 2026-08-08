@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Field } from "@/components/ui/field"
 
 import {
-  useMutation
+  useMutation,
+  useQueryClient
 } from '@tanstack/react-query'
 
 import {
@@ -33,6 +34,7 @@ export const VideoTitleDisplay = (props: VideoDataProps) => {
     const { session, authLoading } = useAuth()
     const [isUpdating, setUpdating] = useState(false)
     const [title, setTitle] = useState(props.title ? limitStringLength(props.title) : limitStringLength(props.filename))
+    const queryClient = useQueryClient()
     
     const updateTitleRequest = useMutation<null, Error, {row_id: string, title: string}>({
 		mutationKey: [`update-video-title`, props.id],
@@ -51,6 +53,11 @@ export const VideoTitleDisplay = (props: VideoDataProps) => {
 		onError: (err) => {
 			console.log(err)			
 		},
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [`get-video-data`, props.id]
+            })
+        },
 		onSettled: () => {
 			setUpdating(false)
 		}

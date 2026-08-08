@@ -4,9 +4,9 @@ import {
   useQueryClient
 } from '@tanstack/react-query'
 
-import { TagPopup } from "../TagPopup"
-import { TagBadge } from "../TagBadge"
-import { useState} from "react"
+import { TagPopup } from "../../TagPopup"
+import { TagBadge } from "../../TagBadge"
+import { useEffect, useState} from "react"
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -29,6 +29,7 @@ const REMOVE_TAG_ENDPOINT = "/api/v2/tags/video/remove";
 
 
 export const TagDisplay = (props: TagProps) => {
+    const [tags, setTags] = useState<Map<string, Tag>>(new Map())
     const { session } = useAuth()
     const [open, setOpen] = useState(false)
     const queryClient = useQueryClient()
@@ -51,7 +52,7 @@ export const TagDisplay = (props: TagProps) => {
             if (!res.ok) {
                 throw new Error(`Request failed: ${res.status}`)
             }
-            res.json()
+            return res.json()
         }),
         onError: (err) => {
             console.error(err)
@@ -80,7 +81,7 @@ export const TagDisplay = (props: TagProps) => {
             if (!res.ok) {
                 throw new Error(`Request failed: ${res.status}`)
             }
-            res.json()
+            return res.json()
         }),
         onError: (err) => {
             console.error(err)
@@ -101,13 +102,16 @@ export const TagDisplay = (props: TagProps) => {
         }),
     })
 
-    console.log(data)
 
-    const tags = new Map(data?.map(tag => [tag.tag_id, tag]))
+    useEffect(() => {
+        setTags(new Map(data?.map(tag => [tag.tag_id, tag])))
+    }, [data])
     
-    function addTagToVideo(tag: Tag) {
-        console.log(tag)
-        addMutation.mutate(tag)
+    function addTagToVideo(newTag: Tag) {
+        const newMap = new Map(tags)
+        newMap.set(newTag.tag_id, newTag)
+        setTags(newMap)
+        addMutation. mutate(newTag)
     }
 
     return (       
@@ -126,6 +130,9 @@ export const TagDisplay = (props: TagProps) => {
             ) : (
                 [...tags.values()].map((tag: Tag) => (
                     <TagBadge key={tag.tag_id} tag={tag} cantRemove={!props.can_modify} onRemove={(tag) => {
+                        const newMap = new Map(tags)
+                        newMap.delete(tag.tag_id)
+                        setTags(newMap)
                         removeMutation.mutate(tag)
                     }}/>
                 ))

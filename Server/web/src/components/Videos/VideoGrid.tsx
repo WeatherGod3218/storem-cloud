@@ -3,7 +3,7 @@ import {
 	useMutation,
 } from '@tanstack/react-query'
 
-import { ThumbnailCard, ThumbnailSkeletonCard } from "./Thumbnails/ThumbnailCard";
+import { ThumbnailCard, ThumbnailSkeletonCard } from "../Thumbnails/ThumbnailCard";
 import { useAuth } from "@/context/AuthContext";
 import { useFilter } from "@/context/FilterContext";
 
@@ -165,17 +165,6 @@ export default function VideoGridInfinite() {
 					<p className="pl-1 text-l text-slate-500"> {sortLabel} </p>
 				</div>
 			</div>
-			{error && (
-				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
-					<span>Couldn't load videos: {error}</span>
-					<button
-					onClick={loadMore}
-					className="ml-auto text-red-700 underline underline-offset-2 hover:text-red-800"
-					>
-					Retry
-					</button>
-				</div>
-			)}
 			{error && (
 				<div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-orange-950 px-4 py-3 text-sm text-red-700">
 					<span>Couldn't load videos: {error}</span>

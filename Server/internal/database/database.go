@@ -124,6 +124,19 @@ func InitDatabase() error {
 	}
 
 	_, err = db.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS actions (
+			row_id 				UUID PRIMARY KEY,
+			user_id				UUID NOT NULL,
+			user_email			TEXT NOT NULL,
+			action 				TEXT NOT NULL,
+			taken_at 			TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS users (
 			row_id 			UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			email 			TEXT UNIQUE NOT NULL,

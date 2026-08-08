@@ -1,6 +1,7 @@
 package videos
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
@@ -197,6 +198,11 @@ func ChangeVideoTitle(c *gin.Context) {
 		return
 	}
 
+	database.LogAction(user, fmt.Sprintf(`Changed Video %s Title to "%s"`,
+		database.ActionVideoName(req.RowID),
+		req.Title,
+	))
+
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
@@ -237,6 +243,11 @@ func ChangeVideoVisibility(c *gin.Context) {
 		return
 	}
 
+	database.LogAction(user, fmt.Sprintf(`Changed Video %s Visibility to "%s"`,
+		database.ActionVideoName(req.RowID),
+		req.Visibility,
+	))
+
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
@@ -276,6 +287,11 @@ func ChangeVideoDescription(c *gin.Context) {
 		})
 		return
 	}
+
+	database.LogAction(user, fmt.Sprintf(`Changed Video %s Description to "%s"`,
+		database.ActionVideoName(req.RowID),
+		req.Description,
+	))
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }

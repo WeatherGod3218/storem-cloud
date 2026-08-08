@@ -54,6 +54,10 @@ func OnVideoUpload() {
 		}
 
 		userId := event.HTTPRequest.Header.Get("X-User-Id")
+		user, ok := users.GetUserByAccessId(userId)
+		if ok != true {
+			return
+		}
 
 		fileModDate := time.UnixMicro(int64(fileModMicro))
 
@@ -72,21 +76,9 @@ func OnVideoUpload() {
 			return
 		}
 
-		vidUrl, err := s3.CreateGetPresignedVideoURL(uploadS3Key)
-		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Error getting video URL")
-			return
-		}
-
-		thumbnailUrl, err := s3.GetThumbnailPresignedURL(uploadS3Key)
-		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Error getting thumbnail URL")
-			return
-		}
-
-		logging.Logger.Info(fmt.Sprintf("Created new database entry for video at row %s", rowId))
-		logging.Logger.Infof("Video URL %s", vidUrl)
-		logging.Logger.Infof("Thumbnail URL %s", thumbnailUrl)
+		database.LogAction(user, fmt.Sprintf(`Created New Video "%s"`,
+			database.ActionTagName(rowId),
+		))
 	}
 }
 

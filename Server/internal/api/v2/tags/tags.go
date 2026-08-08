@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
@@ -56,9 +57,11 @@ func CreateTag(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+
+	database.LogAction(user, fmt.Sprintf(`Created a New Tag "%s"`,
+		database.ActionTagName(req.Name),
+	))
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 // GetAllTags godoc
@@ -152,9 +155,7 @@ func AddVideoTag(c *gin.Context) {
 		return
 	}
 
-	logging.Logger.Infof("%+v", req)
-
-	if err := database.AddTagToVideo(req.VideoID, req.TagID); err != nil {
+	if err := database.AddTagToVideo(user, req.VideoID, req.TagID); err != nil {
 		logging.Logger.Warnf("Error adding video tag to database %s", err)
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request",
@@ -162,9 +163,12 @@ func AddVideoTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	database.LogAction(user, fmt.Sprintf("Added Tag %s to Video %s",
+		database.ActionTagName(req.TagID),
+		database.ActionVideoName(req.VideoID),
+	))
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 // GetVideoTags godoc
@@ -206,9 +210,12 @@ func DeleteVideoTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	database.LogAction(user, fmt.Sprintf("Removed Tag %s from Video %s",
+		database.ActionTagName(req.TagID),
+		database.ActionVideoName(req.VideoID),
+	))
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 func Routes(r *gin.RouterGroup) {

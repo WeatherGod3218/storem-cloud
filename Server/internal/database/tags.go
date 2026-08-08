@@ -53,6 +53,22 @@ func GetAllTags() ([]*models.Tag, error) {
 	return tags, nil
 }
 
+func GetTagName(rowId string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	var name string
+	err := db.QueryRow(ctx, `
+		SELECT name FROM tags
+		WHERE row_id = $1
+		LIMIT 1
+	`, rowId).Scan(&name)
+	if err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
 func CreateTagRow(tagName string, user string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()

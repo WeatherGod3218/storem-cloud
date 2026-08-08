@@ -32,7 +32,6 @@ export const TagBadge = (props: TagProps) => {
                     <button
                         onClick={() => props.onRemove(props.tag)}
                         aria-label={`Remove ${props.tag.name}`}
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                     >
                         <X className="h-3 w-3" />
                     </button>
