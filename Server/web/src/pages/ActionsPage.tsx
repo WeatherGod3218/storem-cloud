@@ -34,7 +34,7 @@ export const ActionsPage = () => {
 
     useDocumentTitle("Audit Log")
 
-    const { data, isPending, error } = useQuery<null, Error, UserInfo>({
+    const { isPending, error } = useQuery<null, Error, UserInfo>({
         queryKey: [`check-action-auth`],
         retry: 3,
         queryFn: () =>
