@@ -6,12 +6,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/scanner"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/verify"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/watcher"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/scanner"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/upload"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/verify"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/watcher"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-yaml/yaml"

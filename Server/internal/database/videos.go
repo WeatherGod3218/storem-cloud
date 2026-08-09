@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 )
 
 const MAX_ROW_AMOUNT int = 3
@@ -153,7 +153,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 
 	baseQuery = fmt.Sprintf("%s ORDER BY %s %s, row_id %s", baseQuery, sortingElement, keyWord, keyWord)
 
-	args = append(args, (MAX_ROW_AMOUNT*3)+1)
+	args = append(args, (MAX_ROW_AMOUNT * 3))
 	baseQuery = fmt.Sprintf("%s LIMIT $%d", baseQuery, len(args))
 
 	rows, err := db.Query(ctx, baseQuery, args...)
@@ -198,7 +198,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 		return nil, false, err
 	}
 
-	hasMore := (len(videos) > (MAX_ROW_AMOUNT * 3))
+	hasMore := (len(videos) > (MAX_ROW_AMOUNT*3)-1)
 	if hasMore {
 		videos = videos[:(MAX_ROW_AMOUNT * 3)]
 	}
@@ -313,6 +313,29 @@ func GetVideoData(rowId string) (*models.GetVideoDataDatabase, error) {
 	}
 
 	return data, nil
+}
+
+func GetVideoName(rowId string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	var customTitle *string
+	var filename string
+
+	err := db.QueryRow(ctx, `
+		SELECT custom_title, filename FROM videos
+		WHERE row_id = $1
+		LIMIT 1
+	`, rowId).Scan(&customTitle, &filename)
+	if err != nil {
+		return "", err
+	}
+
+	name := filename
+	if customTitle != nil {
+		name = *customTitle
+	}
+	return name, nil
 }
 
 func CreateVideoRow(video models.VideoDatabaseEntry) (string, error) {

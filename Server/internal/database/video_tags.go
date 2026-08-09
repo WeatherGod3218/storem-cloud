@@ -4,17 +4,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 )
 
-func AddTagToVideo(videoId string, tagId string) error {
+func AddTagToVideo(user *users.User, videoId string, tagId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if _, err := db.Exec(ctx, `
 		INSERT INTO video_tags (video_id, tag_id, added_by)
 		VALUES ($1, $2, $3)
-	`, videoId, tagId, "No Oauth Yet :("); err != nil {
+	`, videoId, tagId, user.Email); err != nil {
 		return err
 	}
 

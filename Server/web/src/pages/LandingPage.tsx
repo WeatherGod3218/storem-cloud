@@ -1,6 +1,6 @@
 import useDocumentTitle from "@/hooks/DocumentTitle"
 import { Header } from "../components/Header"
-import VideoGridInfinite from "@/components/VideoGrid"
+import VideoGridInfinite from "@/components/Videos/VideoGrid"
 
 export const LandingPage = () => {
     useDocumentTitle("Store 'em Cloud")

@@ -5,10 +5,10 @@ import (
 	"html"
 	"os"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
-	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/redis"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -70,7 +70,7 @@ func HandleEmbedForVideo(c *gin.Context, id string) *string {
 		<meta property="og:video:type" content="video/mp4" />
 		<meta property="og:video:width" content="%d" />
 		<meta property="og:video:height" content="%d" />
-		<meta property="og:site_name" content="Stor'em Cloud">
+		<meta property="og:site_name" content="Store 'em Cloud">
 		<meta property="og:locale" content="en_US">
 	`,
 		html.EscapeString(*video.CustomTitle),

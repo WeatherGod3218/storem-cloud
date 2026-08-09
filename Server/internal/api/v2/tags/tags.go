@@ -1,26 +1,28 @@
 package tags
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/auth"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 	"github.com/gin-gonic/gin"
 )
 
 // CreateTag godoc
 //
-// @Summary      Verify uploaded Videos
-// @Description  Verifies videos that are already uploaded, returning a list of ones that are not verified
+// @Summary      Create a new tag
+// @Description  Creates a new tag with the provided name, autogenerating a color.
 // @Tags         tags
 // @Accept       json
 // @Produce      json
-// @Param        request  body      string  true  "Tag to Create"
-// @Success      200      {object}  models.SuccessResponse
+// @Param        request  body      models.CreateTagRequest  true  "The New Tag"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
+// @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/create [post]
 func CreateTag(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
@@ -31,7 +33,7 @@ func CreateTag(c *gin.Context) {
 		})
 		return
 	}
-	var req *models.CreateTagRequest
+	var req models.CreateTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.Warnf("Error unmarshling request %s", err)
@@ -56,19 +58,20 @@ func CreateTag(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+
+	database.LogAction(user, fmt.Sprintf(`Created a New Tag "%s"`,
+		database.ActionTagName(req.Name),
+	))
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 // GetAllTags godoc
 //
 // @Summary      Gets all the tags
-// @Description  Gets all of the tags in the system
+// @Description  Gets all of the tags in the system.
 // @Tags         tags
-// @Accept       json
 // @Produce      json
-// @Success      200      {object}  []*models.Tag
+// @Success      200      {object}  []models.Tag
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/get [get]
 func GetAllTags(c *gin.Context) {
@@ -81,19 +84,17 @@ func GetAllTags(c *gin.Context) {
 		return
 	}
 
-	logging.Logger.Info(list)
-
 	c.JSON(http.StatusOK, list)
 }
 
 // GetVideoTags godoc
 //
 // @Summary      Get Video's Tags
-// @Description  Gets all of the tags associated with a video
+// @Description  Gets all of the tags associated with a Video ID
 // @Tags         videos, tags
 // @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video id"
+// @Param        request  path     string  true  "The Video Id to get tags of"
 // @Success      200      {object}  []models.Tag
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/get/{id} [get]
@@ -123,14 +124,15 @@ func GetVideoTags(c *gin.Context) {
 
 // AddVideoTag godoc
 //
-// @Summary      Get Video's Tags
-// @Description  Gets all of the tags associated with a video
+// @Summary      Add Tag to Video
+// @Description Adds the associated TagId onto a VideoId
 // @Tags         videos, tags
 // @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video id"
-// @Success      200      {object}  models.SuccessResponse
+// @Param        request  body      models.ModifyVideoTagRequest  true  "Tag / Video Id"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
+// @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/add [post]
 func AddVideoTag(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
@@ -142,7 +144,7 @@ func AddVideoTag(c *gin.Context) {
 		return
 	}
 
-	var req *models.ModifyVideoTagRequest
+	var req models.ModifyVideoTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.Warnf("Error with parsing request %s", err)
@@ -152,9 +154,7 @@ func AddVideoTag(c *gin.Context) {
 		return
 	}
 
-	logging.Logger.Infof("%+v", req)
-
-	if err := database.AddTagToVideo(req.VideoID, req.TagID); err != nil {
+	if err := database.AddTagToVideo(user, req.VideoID, req.TagID); err != nil {
 		logging.Logger.Warnf("Error adding video tag to database %s", err)
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: "Unable to process request",
@@ -162,21 +162,25 @@ func AddVideoTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	database.LogAction(user, fmt.Sprintf("Added Tag %s to Video %s",
+		database.ActionTagName(req.TagID),
+		database.ActionVideoName(req.VideoID),
+	))
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
-// GetVideoTags godoc
+// DeleteVideoTag godoc
 //
-// @Summary      Get Video's Tags
-// @Description  Gets all of the tags associated with a video
+// @Summary      Remove Video Tag
+// @Description  Removes Tag from a provided Video Id
 // @Tags         videos, tags
 // @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video id"
-// @Success      200      {object}  models.SuccessResponse
+// @Param        request  body      models.ModifyVideoTagRequest  true  "Tag / Video Id"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
+// @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/delete [delete]
 func DeleteVideoTag(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
@@ -188,7 +192,7 @@ func DeleteVideoTag(c *gin.Context) {
 		return
 	}
 
-	var req *models.ModifyVideoTagRequest
+	var req models.ModifyVideoTagRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.Warnf("Error with parsing request %s", err)
@@ -206,9 +210,12 @@ func DeleteVideoTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse{
-		Success: true,
-	})
+	database.LogAction(user, fmt.Sprintf("Removed Tag %s from Video %s",
+		database.ActionTagName(req.TagID),
+		database.ActionVideoName(req.VideoID),
+	))
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 func Routes(r *gin.RouterGroup) {

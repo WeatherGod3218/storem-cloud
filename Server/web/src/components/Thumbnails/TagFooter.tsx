@@ -27,9 +27,6 @@ export const TagFooter = (props: TagProps) => {
         }),
     })
 
-    console.log(data)
-
-
     return (       
         <> 
         <div className="pb-2 pt-1 flex flex-row items-center">

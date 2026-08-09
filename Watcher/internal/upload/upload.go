@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
 	"github.com/alfg/mp4"
 	"github.com/bdragon300/tusgo"
 )

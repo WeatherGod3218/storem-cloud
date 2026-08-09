@@ -10,13 +10,13 @@ import {Badge} from "@/components/ui/badge"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { VideoTitleDisplay } from "./TitleDisplay"
-import { VideoDescDisplay } from "./DescriptionDisplay"
+import { VideoTitleDisplay } from "./Displays/Title"
+import { VideoDescDisplay } from "./Displays/Description"
 
 import { useMediaQuery } from "@/hooks/MediaQuery"
 
 import { memo, useState } from "react"
-import { TagDisplay } from "./TagDisplay"
+import { TagDisplay } from "./Displays/Tags"
 import { VideoScrollBar } from "./ScrollBar/VideoScrollBar"
 import { Button } from "@base-ui/react"
 import { ChangeVisibilityPopup } from "./ChangeVisibility"
@@ -40,11 +40,7 @@ type VideoData = {
     can_modify: boolean
 }
 
-// const DESCRIPTION_MAX_CHAR = 300
 
-// function limitString(text: string): string {
-//   return text.length > DESCRIPTION_MAX_CHAR ? text.slice(0, DESCRIPTION_MAX_CHAR) : text;
-// }
 
 const VideoPlayer = memo(({ src, thumbnail }: { src: string, thumbnail: string }) => (
     
@@ -63,7 +59,6 @@ const VideoPlayer = memo(({ src, thumbnail }: { src: string, thumbnail: string }
 export const VideoCard = (props: VideoData) => {
     const [visibility, setVisibility] = useState<string>(props.visibility)
     const [visibilityMenuOpen, setVisibilityMenuOpen] = useState<boolean>(false)
-    //TODO: make a visibility display
     const isVertical = useMediaQuery("(max-width: 903px)")
     console.log(isVertical)
 

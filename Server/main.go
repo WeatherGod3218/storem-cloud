@@ -7,21 +7,21 @@ import (
 	"os"
 	"strings"
 
-	v2 "github.com/WeatherGod3218/weather-reels-server/internal/api/v2"
-	"github.com/WeatherGod3218/weather-reels-server/internal/api/v2/transfer"
-	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
-	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	v2 "github.com/WeatherGod3218/storem-cloud-server/internal/api/v2"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/api/v2/transfer"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/auth"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/redis"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/s3"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"go.yaml.in/yaml/v3"
 
-	_ "github.com/WeatherGod3218/weather-reels-server/docs"
+	_ "github.com/WeatherGod3218/storem-cloud-server/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -59,7 +59,7 @@ func chooseRouter() *gin.Engine {
 	return gin.New()
 }
 
-// @title WeatherReels
+// @title Store 'em Cloud
 // @version 1.0
 // @description API for backing up videos.
 // @BasePath /api/v2

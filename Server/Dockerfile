@@ -10,19 +10,23 @@ COPY web/ .
 
 RUN npm run build
 
+
 FROM golang:1.26.2-alpine AS gobuilder
 
 WORKDIR /app
+
 RUN apk add git
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY go.* .
 RUN go mod download
 COPY internal internal
-COPY docs docs
 
 COPY *.go .
-
 COPY --from=npmbuilder /app/dist/ ./web/dist/
+
+RUN /go/bin/swag init --parseInternal --parseDependency
+
 RUN go build -o server .
 
 FROM alpine:latest
@@ -33,7 +37,6 @@ WORKDIR /app
 COPY --from=gobuilder /app/server .
 
 EXPOSE 8080
-ENV DEV_MODE="false"
 
 CMD ["./server"]
 

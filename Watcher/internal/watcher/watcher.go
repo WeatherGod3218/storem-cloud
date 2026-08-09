@@ -3,7 +3,7 @@ package watcher
 import (
 	"fmt"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"
 )

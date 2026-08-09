@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -117,6 +117,19 @@ func InitDatabase() error {
 			added_by 	TEXT NOT NULL,
 			added_at 	TIMESTAMPTZ DEFAULT now(),
 			PRIMARY KEY (video_id, tag_id)
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS actions (
+			row_id 				UUID PRIMARY KEY,
+			user_id				UUID NOT NULL,
+			user_email			TEXT NOT NULL,
+			action 				TEXT NOT NULL,
+			taken_at 			TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
 	`)
 	if err != nil {

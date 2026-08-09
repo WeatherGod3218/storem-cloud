@@ -1,9 +1,9 @@
 import { Header } from "../components/Header"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useParams } from "react-router"
-import { VideoCard, SkeletonVideoCard } from "@/components/Video/VideoCard"
+import { VideoCard, SkeletonVideoCard } from "@/components/Videos/VideoCard"
 import { useAuth } from "@/context/AuthContext"
 //import { useMediaQuery } from "@/hooks/MediaQuery";
 import { useNavigate } from "react-router"
@@ -45,13 +45,12 @@ class HttpError extends Error {
 export const VideoPage = () => {   
 	const { session, authLoading} = useAuth()
     let params = useParams()
-
+    const queryClient = useQueryClient()
     const navigate = useNavigate()
 
     const goToUnauthorized = () => {
         navigate("/unauthorized")
     }
-
 
     const { isPending, error, data } = useQuery<VideoData, Error>({
         queryKey: [`get-video-data`, params.id],
@@ -75,6 +74,12 @@ export const VideoPage = () => {
             }
         }
     }, [error]);
+
+    useEffect(() => {
+        queryClient.invalidateQueries({
+            queryKey: [`get-video-data`, params.id]
+        })
+    }, [authLoading])
 
     useDocumentTitle((data ? (data.custom_title ? data.custom_title : data.filename) : "Loading..."))
 
