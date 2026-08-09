@@ -1,4 +1,4 @@
-module github.com/WeatherGod3218/weather-reels-watcher
+module github.com/WeatherGod3218/storem-cloud-watcher
 
 go 1.26.2
 

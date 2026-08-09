@@ -3,11 +3,11 @@ package actions
 import (
 	"net/http"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/auth"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -18,13 +18,14 @@ const MODULE = "v2/api/actions" //stfu sonar
 //
 // @Summary      Gets a group of logged actions
 // @Description  Gets a group of logged actions for auditing
+// @Tags actions
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.GetVideoGroupRequest  true  "Video information"
-// @Success      200      {object}  models.GetVideoGroupResponse
+// @Param        request  body      models.GetActionGroupRequest  true  "Action Group"
+// @Success      200      {object}  models.GetActionsGroupResponse
 // @Failure      400      {object}  models.ErrorResponse
-// @Router       /api/v2/videos/abort [post]
-
+// @Failure      401      {object}  models.ErrorResponse
+// @Router       /api/v2/actions/group [post]
 func GetActionGroup(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
 

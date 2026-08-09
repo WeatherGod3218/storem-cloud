@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

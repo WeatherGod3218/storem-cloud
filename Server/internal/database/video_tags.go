@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 )
 
 func AddTagToVideo(user *users.User, videoId string, tagId string) error {

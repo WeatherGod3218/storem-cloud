@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/auth"
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
-	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
-	"github.com/WeatherGod3218/weather-reels-server/internal/users"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/auth"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/redis"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/s3"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/users"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -50,42 +50,6 @@ func VerifyVideos(c *gin.Context) {
 	c.JSON(http.StatusOK, nonVerified)
 }
 
-// AccessVideo godoc
-//
-// @Summary      Get URL for a video
-// @Description  Generate a presigned URL for a video file
-// @Tags         videos
-// @Accept       json
-// @Produce      json
-// @Param        request  path     string  true  "Video information"
-// @Success      200      {object}  models.SuccessResponse
-// @Failure      400      {object}  models.ErrorResponse
-// @Router       /api/v2/videos/fetch/{video} [get]
-func AccessVideo(c *gin.Context) {
-	video := c.Param("video")
-
-	if video == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "Unable to process request!",
-		})
-		return
-	}
-
-	url, err := s3.CreateGetPresignedVideoURL(video)
-	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "AccessVideo"}).Warning("Could not get video url")
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "Unable to process request!",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, models.AccessVideoResponse{
-		URL:   url,
-		Video: video,
-	})
-}
-
 // GetVideoGroup godoc
 //
 // @Summary      Gets a group of video/thumbnail urls
@@ -95,11 +59,11 @@ func AccessVideo(c *gin.Context) {
 // @Param        request  body      models.GetVideoGroupRequest  true  "Video information"
 // @Success      200      {object}  models.GetVideoGroupResponse
 // @Failure      400      {object}  models.ErrorResponse
-// @Router       /api/v2/videos/abort [post]
+// @Router       /api/v2/videos/group [post]
 func GetVideoGroup(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
 
-	var req *models.GetVideoGroupRequest
+	var req models.GetVideoGroupRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoGroup"}).Warning("failed to bind JSON")
@@ -109,7 +73,7 @@ func GetVideoGroup(c *gin.Context) {
 		return
 	}
 
-	videoEntries, hasMore, err := database.GetVideoGroup(req, user)
+	videoEntries, hasMore, err := database.GetVideoGroup(&req, user)
 	if err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "GetVideoGroup"}).Warning("failed to get videos from database")
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -180,7 +144,7 @@ func ChangeVideoTitle(c *gin.Context) {
 		return
 	}
 
-	var req *models.ChangeVideoTitleRequest
+	var req models.ChangeVideoTitleRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoTitle"}).Warning("failed to bind JSON")
@@ -206,16 +170,16 @@ func ChangeVideoTitle(c *gin.Context) {
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
-// ChangeVideoDescription godoc
+// ChangeVideoVisibility godoc
 //
-// @Summary      Updates a videos description
-// @Description  Updates a given videoID's description
+// @Summary      Updates a videos visiblity
+// @Description  Updates a given videoID's visiblity
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New Title"
-// @Success      200      {object}  models.SuccessResponse
+// @Param        request  body      models.ChangeVideoVisibilityRequest  true  "New Visibility"
+// @Success      204      none
 // @Failure      400      {object}  models.ErrorResponse
-// @Router       /api/v2/videos/description [put]
+// @Router       /api/v2/videos/visbility [put]
 func ChangeVideoVisibility(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
 	if user == nil || !user.CanModifyVideoData() || !user.CanViewPrivateVideos() {
@@ -225,7 +189,7 @@ func ChangeVideoVisibility(c *gin.Context) {
 		return
 	}
 
-	var req *models.ChangeVideoVisibilityRequest
+	var req models.ChangeVideoVisibilityRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to bind JSON")
@@ -257,8 +221,8 @@ func ChangeVideoVisibility(c *gin.Context) {
 // @Description  Updates a given videoID's description
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New Title"
-// @Success      200      {object}  models.SuccessResponse
+// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New TDesription"
+// @Success      204      none
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/description [put]
 func ChangeVideoDescription(c *gin.Context) {
@@ -270,7 +234,7 @@ func ChangeVideoDescription(c *gin.Context) {
 		return
 	}
 
-	var req *models.ChangeVideoDescriptionRequest
+	var req models.ChangeVideoDescriptionRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "v2/api/videos", "method": "ChangeVideoDescription"}).Warning("failed to bind JSON")
@@ -300,9 +264,7 @@ func ChangeVideoDescription(c *gin.Context) {
 //
 // @Summary      Get random data for a video
 // @Description  Gets all the required data for a random video display page
-// @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video information"
 // @Success      200      {object}  models.GetRandomVideoResponse
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/random [get]

@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
 	"github.com/gin-gonic/gin"
 )
 

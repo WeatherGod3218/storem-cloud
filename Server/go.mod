@@ -1,4 +1,4 @@
-module github.com/WeatherGod3218/weather-reels-server
+module github.com/WeatherGod3218/storem-cloud-server
 
 go 1.26.2
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/s3"
 )
 
 const THUMBNAIL_SECONDS_BEFORE_END float64 = 5

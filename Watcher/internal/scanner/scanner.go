@@ -8,9 +8,9 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/verify"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/verify"
 )
 
 func ScanDirectory(config models.Config, baseDir string, wg *sync.WaitGroup, path string, recurseAmount int, includeSubDirs bool, watcher *fsnotify.Watcher) error {

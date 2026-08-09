@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/models"
-	"github.com/WeatherGod3218/weather-reels-watcher/internal/upload"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/upload"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )

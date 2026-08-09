@@ -5,10 +5,10 @@ import (
 	"html"
 	"os"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/database"
-	"github.com/WeatherGod3218/weather-reels-server/internal/logging"
-	"github.com/WeatherGod3218/weather-reels-server/internal/redis"
-	"github.com/WeatherGod3218/weather-reels-server/internal/s3"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/database"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/logging"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/redis"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )

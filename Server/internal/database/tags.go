@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/WeatherGod3218/weather-reels-server/internal/models"
-	"github.com/WeatherGod3218/weather-reels-server/internal/tags"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/models"
+	"github.com/WeatherGod3218/storem-cloud-server/internal/tags"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
