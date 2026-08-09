@@ -34,11 +34,11 @@ export const ActionsPage = () => {
 
     useDocumentTitle("Audit Log")
 
-    const { data, isPending, error } = useQuery<null, Error, UserInfo>({
+    const { isPending, error } = useQuery<null, Error, UserInfo>({
         queryKey: [`check-action-auth`],
         retry: 3,
         queryFn: () =>
-        fetch(`${ENDPOINT}}`, {
+        fetch(`${ENDPOINT}`, {
 			method: "GET",
 			headers: {
 				"Authorization": `Bearer ${session?.access_token}`
@@ -50,12 +50,12 @@ export const ActionsPage = () => {
     })
 
     useEffect(() => {
-        if (!(data && data.actions) || error instanceof HttpError && error.status === 401) {
+        if (error instanceof HttpError && error.status === 401) {
             if (session != null) {
                 goToUnauthorized();                
             }
         }
-    }, [error, data]);
+    }, [error]);
 
 
     return (
