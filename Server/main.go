@@ -59,7 +59,7 @@ func chooseRouter() *gin.Engine {
 	return gin.New()
 }
 
-// @title WeatherReels
+// @title Store 'em Cloud
 // @version 1.0
 // @description API for backing up videos.
 // @BasePath /api/v2

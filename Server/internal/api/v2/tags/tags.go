@@ -19,8 +19,8 @@ import (
 // @Tags         tags
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.CreateTagRequest  true  "Tag Info"
-// @Success      204      none
+// @Param        request  body      models.CreateTagRequest  true  "The New Tag"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/create [post]
@@ -71,7 +71,7 @@ func CreateTag(c *gin.Context) {
 // @Description  Gets all of the tags in the system.
 // @Tags         tags
 // @Produce      json
-// @Success      200      {object}  []*models.Tag
+// @Success      200      {object}  []models.Tag
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/get [get]
 func GetAllTags(c *gin.Context) {
@@ -94,7 +94,7 @@ func GetAllTags(c *gin.Context) {
 // @Tags         videos, tags
 // @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video id"
+// @Param        request  path     string  true  "The Video Id to get tags of"
 // @Success      200      {object}  []models.Tag
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/get/{id} [get]
@@ -130,7 +130,7 @@ func GetVideoTags(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      models.ModifyVideoTagRequest  true  "Tag / Video Id"
-// @Success      204 	  none
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/add [post]
@@ -178,7 +178,7 @@ func AddVideoTag(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      models.ModifyVideoTagRequest  true  "Tag / Video Id"
-// @Success      204	  none
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Failure      401      {object}  models.ErrorResponse
 // @Router       /api/v2/tags/video/delete [delete]

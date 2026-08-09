@@ -70,7 +70,7 @@ func HandleEmbedForVideo(c *gin.Context, id string) *string {
 		<meta property="og:video:type" content="video/mp4" />
 		<meta property="og:video:width" content="%d" />
 		<meta property="og:video:height" content="%d" />
-		<meta property="og:site_name" content="Stor'em Cloud">
+		<meta property="og:site_name" content="Store 'em Cloud">
 		<meta property="og:locale" content="en_US">
 	`,
 		html.EscapeString(*video.CustomTitle),

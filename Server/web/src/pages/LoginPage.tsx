@@ -133,7 +133,7 @@ export default function LoginPage() {
   return (
     <div>
       <title>Login</title>
-      <meta name="description" content="Login Page for the Stor'em Cloud Video Player Application"></meta>
+      <meta name="description" content="Login Page for the Store 'em Cloud Video Player Application"></meta>
 
       <h1>Supabase + React</h1>
       <p>Sign in via magic link with your email below</p>

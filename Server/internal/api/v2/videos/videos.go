@@ -22,7 +22,7 @@ import (
 // @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  body      []string  true  "List of video filenames"
+// @Param        request  body      []string  true  "List of Video Filenames"
 // @Success      200      {array}  []string
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/verify [put]
@@ -54,9 +54,10 @@ func VerifyVideos(c *gin.Context) {
 //
 // @Summary      Gets a group of video/thumbnail urls
 // @Description  Gets a group of video and thumbnail urls with the given offset. Max of 10
+// @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.GetVideoGroupRequest  true  "Video information"
+// @Param        request  body      models.GetVideoGroupRequest  true  "The Optional Cursor for pagination"
 // @Success      200      {object}  models.GetVideoGroupResponse
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/group [post]
@@ -129,10 +130,11 @@ func GetVideoGroup(c *gin.Context) {
 //
 // @Summary      Updates a videos title
 // @Description  Updates a given videoID's title
+// @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.ChangeVideoTitleRequest  true  "New Title"
-// @Success      204      none
+// @Param        request  body      models.ChangeVideoTitleRequest  true  "The Video Id and the New Title"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/title [put]
 func ChangeVideoTitle(c *gin.Context) {
@@ -174,10 +176,11 @@ func ChangeVideoTitle(c *gin.Context) {
 //
 // @Summary      Updates a videos visiblity
 // @Description  Updates a given videoID's visiblity
+// @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.ChangeVideoVisibilityRequest  true  "New Visibility"
-// @Success      204      none
+// @Param        request  body      models.ChangeVideoVisibilityRequest  true  "The Video Id and New Visibility"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/visbility [put]
 func ChangeVideoVisibility(c *gin.Context) {
@@ -219,10 +222,11 @@ func ChangeVideoVisibility(c *gin.Context) {
 //
 // @Summary      Updates a videos description
 // @Description  Updates a given videoID's description
+// @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "New TDesription"
-// @Success      204      none
+// @Param        request  body      models.ChangeVideoDescriptionRequest  true  "The Video Id and New Description"
+// @Success      204 "No Content"
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/description [put]
 func ChangeVideoDescription(c *gin.Context) {
@@ -264,6 +268,7 @@ func ChangeVideoDescription(c *gin.Context) {
 //
 // @Summary      Get random data for a video
 // @Description  Gets all the required data for a random video display page
+// @Tags         videos
 // @Produce      json
 // @Success      200      {object}  models.GetRandomVideoResponse
 // @Failure      400      {object}  models.ErrorResponse
@@ -291,9 +296,10 @@ func GetRandomVideo(c *gin.Context) {
 //
 // @Summary      Get data for a video
 // @Description  Gets all the required data for a video display page
+// @Tags         videos
 // @Accept       json
 // @Produce      json
-// @Param        request  path     string  true  "Video information"
+// @Param        request  path     string  true  "The Video Id to get Info From"
 // @Success      200      {object}  models.GetVideoDataResponse
 // @Failure      400      {object}  models.ErrorResponse
 // @Router       /api/v2/videos/video [get]

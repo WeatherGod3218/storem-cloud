@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetUserInfo godoc
+//
+// @Summary      Get User Info
+// @Description  Gets all info related to a user
+// @Tags users
+// @Accept       json
+// @Produce      json
+// @Success      200      {object}  models.GetUserInfoResponse
+// @Router       /api/v2/users/info [get]
 func GetUserInfo(c *gin.Context) {
 	user := users.GetUserByToken(c.Get("User"))
 	if user == nil {
