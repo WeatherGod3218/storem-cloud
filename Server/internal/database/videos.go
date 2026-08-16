@@ -114,7 +114,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 			baseQuery = fmt.Sprintf("%s AND v.visibility = 'Public'", baseQuery)
 		}
 
-		if options.Filters.Title != nil {
+		if options.Filters.Title != nil && *options.Filters.Title != "" {
 			args = append(args, "%"+*options.Filters.Title+"%")
 			baseQuery = fmt.Sprintf("%s AND v.custom_title ILIKE $%d", baseQuery, len(args))
 		}
@@ -122,7 +122,7 @@ func GetVideoGroup(options *models.GetVideoGroupRequest, user *users.User) ([]mo
 		if (user == nil) || !user.CanViewPrivateVideos() {
 			baseQuery = fmt.Sprintf("%s AND visibility = 'Public'", baseQuery)
 		}
-		if options.Filters.Title != nil {
+		if options.Filters.Title != nil && *options.Filters.Title != "" {
 			args = append(args, "%"+*options.Filters.Title+"%")
 			baseQuery = fmt.Sprintf("%s AND custom_title ILIKE $%d", baseQuery, len(args))
 		}

@@ -16,14 +16,13 @@ func ConvertToThumbnailKey(fileName string) string {
 }
 
 func CreatePermanentThumbnailURL(video string) (string, error) {
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return "", fmt.Errorf("AWS_S3_UID environment variable is not set")
 	}
 	region := GetRegion()
 	key := ConvertToThumbnailKey(video)
 
-	fileUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key)
+	fileUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", BucketName, region, key)
 	return fileUrl, nil
 }
 
@@ -31,14 +30,13 @@ func StoreThumbnailImageBytes(uploadId string, byteData []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return errors.New("AWS_S3_UID environment variable is not set")
 	}
 	key := ConvertToThumbnailKey(uploadId)
 
 	_, err := S3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(bucket),
+		Bucket:      aws.String(BucketName),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(byteData),
 		ContentType: aws.String("image/png"),
@@ -56,8 +54,7 @@ func GetThumbnailPresignedURL(id string) (string, error) {
 
 	presign := s3.NewPresignClient(S3Client)
 
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return "", fmt.Errorf("AWS_S3_UID environment variable is not set")
 	}
 	key := ConvertToThumbnailKey(id)
@@ -65,7 +62,7 @@ func GetThumbnailPresignedURL(id string) (string, error) {
 	lifetime := GetPresignURLTime()
 
 	request, err := presign.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(BucketName),
 		Key:    aws.String(key),
 	}, s3.WithPresignExpires(lifetime))
 	if err != nil {

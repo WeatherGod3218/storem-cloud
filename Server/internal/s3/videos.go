@@ -73,14 +73,13 @@ func ceilDiv(a, b int64) int64 {
 }
 
 func CreatePermanentVideoURL(uploadId string) (string, error) {
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return "", fmt.Errorf("bucket environment variable is not set")
 	}
 	region := GetRegion()
 	key := uploadId
 
-	fileUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key)
+	fileUrl := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", BucketName, region, key)
 	return fileUrl, nil
 }
 
@@ -88,15 +87,14 @@ func DeleteVideo(uploadId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return fmt.Errorf("bucket environment variable is not set")
 	}
 
 	key := uploadId
 
 	_, err := S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(BucketName),
 		Key:    aws.String(key),
 	})
 	if err != nil {
@@ -112,8 +110,7 @@ func CreateGetPresignedVideoURL(uploadId string) (string, error) {
 
 	presign := s3.NewPresignClient(S3Client)
 
-	bucket := bucketName
-	if bucket == "" {
+	if BucketName == "" {
 		return "", fmt.Errorf("bucket environment variable is not set")
 	}
 
@@ -122,7 +119,7 @@ func CreateGetPresignedVideoURL(uploadId string) (string, error) {
 	lifetime := GetPresignURLTime()
 
 	request, err := presign.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(BucketName),
 		Key:    aws.String(key),
 	}, s3.WithPresignExpires(lifetime))
 	if err != nil {
