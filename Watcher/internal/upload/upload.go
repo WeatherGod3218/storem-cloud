@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
 	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
 	"github.com/alfg/mp4"
 	"github.com/bdragon300/tusgo"
@@ -47,6 +48,7 @@ func createUploadFromFile(config models.Config, file *os.File, fileName string, 
 
 	length, err := getMP4Length(fileName)
 	if err != nil {
+		logging.Logger.Warnf("Failed to get video length for file: %s", fileName)
 		return nil, err
 	}
 
@@ -69,7 +71,6 @@ func createUploadFromFile(config models.Config, file *os.File, fileName string, 
 }
 
 func uploadWithRetry(destination *tusgo.UploadStream, file *os.File) error {
-
 	if _, err := destination.Sync(); err != nil {
 		return err
 	}
@@ -121,6 +122,9 @@ func UploadVideo(config models.Config, fileName string, baseDir string) error {
 	}
 
 	file, err := os.Open(fileName)
+
+	logging.Logger.Infof("Starting Video Upload for %s", fileName)
+
 	if err != nil {
 		return err
 	}
@@ -135,6 +139,8 @@ func UploadVideo(config models.Config, fileName string, baseDir string) error {
 	if err := uploadWithRetry(stream, file); err != nil {
 		return err
 	}
+
+	logging.Logger.Infof("Completed Video Uplaod for %s", fileName)
 
 	return nil
 }

@@ -24,21 +24,21 @@ services:
         read_only: true
     depends_on:
       - redis
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    #   interval: 15s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 5s
 
   storem-cloud-watcher:
     build: ./Watcher/
     networks:
       - storem-cloud
     volumes:
-      # - type: bind
-      #   source: "E:/AssetFolder/BackUp/Video Files/MedalFiles/Clips"
-      #   target: /clips
+      - type: bind
+        source: "E:/AssetFolder/BackUp/Video Files/MedalFiles/Clips"
+        target: /clips
       - type: bind
         source: ./Watcher/config.yaml
         target: /app/config.yaml
@@ -48,8 +48,8 @@ services:
         target: /app/credentials.yaml
         read_only: true
     depends_on:
-      storem-cloud-server:
-        condition: service_healthy
+      # storem-cloud-server:
+      #   condition: service_healthy
       redis:
         condition: service_started
 

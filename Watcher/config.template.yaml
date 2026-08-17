@@ -9,4 +9,4 @@ directories: # List of all directories to track
 
 hashFullFile: false # Whether to hash the full file contents, or just the filename
 includeDirectoryPath: false # Whether to save the full filepath when backing up, or just the subdirectory + file (no effect if hashFullFile is true)
-backupDuringRuntime: false # Whether to backup videos during runtime
+backupDuringRuntime: false # Whether to backup videos during runtime 
