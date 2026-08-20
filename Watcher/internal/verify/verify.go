@@ -27,28 +27,27 @@ func AddFileToVerifyList(config models.Config, file string, baseDir string) {
 
 	if !config.IncludeDirectoryPath {
 		file = strings.TrimPrefix(file, baseDir)
+		file = strings.TrimPrefix(file, string(filepath.Separator))
 	}
-	filesToVerify[file] = baseDir
-
+	filesToVerify[filepath.ToSlash(file)] = baseDir
 }
 
 func GetAllFilesToVerify(config models.Config) []string {
 	retList := make([]string, len(filesToVerify))
 	index := 0
 	for file, baseDir := range filesToVerify {
+		retList[index] = file
 		if !config.IncludeDirectoryPath {
 			retList[index] = strings.TrimPrefix(file, baseDir)
 		}
-		retList[index] = strings.TrimPrefix(retList[index], string(filepath.Separator))
+		retList[index] = filepath.ToSlash(retList[index])
 		index++
 	}
 	return retList
 }
 
 func GetBaseDirFromFile(file string) string {
-	file = strings.TrimPrefix(file, string(filepath.Separator)) //incase it has a leading slash
-	file = fmt.Sprintf("%s%s", string(filepath.Separator), file)
-	return filesToVerify[file]
+	return filesToVerify[filepath.ToSlash(file)]
 }
 
 func ValidateFilesForBackup(credentials models.Credentials, config models.Config) error {

@@ -1,0 +1,109 @@
+name: Build Source For Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Install Go Dependencies
+        working-directory: ./Watcher
+        run: go mod download
+
+      - name: Install goversioninfo
+        working-directory: ./Watcher
+        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+      - name: Generate versioninfo.json
+        working-directory: ./Watcher
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          BUILD=${{ github.run_number }}
+          CURRENT_YEAR=$(date +%Y)
+          cat > versioninfo.json << EOF
+          {
+            "FixedFileInfo": {
+              "FileVersion": { "Major": ${MAJOR}, "Minor": ${MINOR}, "Patch": ${PATCH}, "Build": ${BUILD} },
+              "ProductVersion": { "Major": ${MAJOR}, "Minor": ${MINOR}, "Patch": ${PATCH}, "Build": ${BUILD} },
+              "FileFlagsMask": "3f",
+              "FileFlags": "00",
+              "FileOS": "040004",
+              "FileType": "01",
+              "FileSubType": "00"
+            },
+            "StringFileInfo": {
+              "CompanyName": "WeatherWorks",
+              "FileDescription": "Client for detecting and uploading videos",
+              "FileVersion": "${VERSION}.${BUILD}",
+              "InternalName": "storemcloud",
+              "LegalCopyright": "Copyright © ${CURRENT_YEAR} WeatherWorks",
+              "OriginalFilename": "storemcloud.exe",
+              "ProductName": "Store 'em' Cloud",
+              "ProductVersion": "${VERSION}"
+            },
+            "VarFileInfo": {
+              "Translation": { "LangID": "0409", "CharsetID": "04B0" }
+            },
+            "IconPath": "icon.ico"
+          }
+          EOF
+
+      - name: Generate resource file
+        working-directory: ./Watcher
+        run: goversioninfo
+
+      - name: Build Windows Binary
+        working-directory: ./Watcher
+        shell: bash
+        run: env CGO_ENABLED=0 go build -o storemcloud.exe .
+
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: storemcloud
+          path: ./Watcher/storemcloud.exe
+
+  release:
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create bin folder
+        run: mkdir -p bin
+
+      - name: Add config template
+        run: cp ./Watcher/config.template.yaml bin/
+
+      - name: Add credentials template
+        run: cp ./Watcher/credentials.template.yaml bin/
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: bin
+          merge-multiple: true
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bin/storemcloud.exe
+            bin/config.template.yaml
+            bin/credentials.template.yaml

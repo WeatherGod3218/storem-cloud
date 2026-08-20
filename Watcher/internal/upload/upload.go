@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/WeatherGod3218/storem-cloud-watcher/internal/hasher"
 	"github.com/WeatherGod3218/storem-cloud-watcher/internal/logging"
 	"github.com/WeatherGod3218/storem-cloud-watcher/internal/models"
 	"github.com/alfg/mp4"
@@ -47,6 +48,12 @@ func createUploadFromFile(config models.Config, file *os.File, fileName string, 
 	}
 
 	length, err := getMP4Length(fileName)
+	if err != nil {
+		logging.Logger.Warnf("Failed to get video length for file: %s", fileName)
+		return nil, err
+	}
+
+	_, err = hasher.HashFile(fileName)
 	if err != nil {
 		logging.Logger.Warnf("Failed to get video length for file: %s", fileName)
 		return nil, err

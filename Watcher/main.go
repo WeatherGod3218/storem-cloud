@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,31 +19,41 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//go:generate goversioninfo -icon=icon.ico
+
+func failedStartup(err error, msg string) {
+	logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Warn(msg)
+	logging.Logger.Info("Shutting down in 5 seconds...")
+	time.Sleep(time.Second * 5)
+	os.Exit(1)
+}
+
 func main() {
 	cfgFile, err := os.ReadFile("config.yaml")
+
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed read in config file!")
+		failedStartup(err, "Failed read in config file!")
 	}
 
 	var config models.Config
 	err = yaml.Unmarshal(cfgFile, &config)
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error loading config file!")
+		failedStartup(err, "Error loading config file!")
 	}
 
 	credFile, err := os.ReadFile("credentials.yaml")
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to read in cred file!")
+		failedStartup(err, "Failed to read in cred file!")
 	}
 
 	var credentials models.Credentials
 	err = yaml.Unmarshal(credFile, &credentials)
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error loading credentials file!")
+		failedStartup(err, "Error loading credentials file!")
 	}
 
 	if len(config.Directories) <= 0 {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("No directories were set to be backed up!")
+		failedStartup(errors.New("no directories set"), "No directories were set to be backed up!")
 	}
 
 	upload.InitTusio(credentials)
@@ -52,23 +63,24 @@ func main() {
 	if config.BackupDuringRuntime {
 		wtch, err = watcher.InitWatcher()
 		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Failed to start watcher!")
+			failedStartup(err, "Failed to start watcher!")
 		}
 		defer wtch.Close()
 	}
 
 	if err := scanner.ScanFiles(config, wtch); err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error scanning files for verification")
+		failedStartup(err, "Error scanning files for verification")
 	}
 
 	time.Sleep(time.Second * 5)
 
 	if err := verify.ValidateFilesForBackup(credentials, config); err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Fatal("Error validating files for backup!")
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Warn("Error validating files for backup!")
+
 	}
 
 	if err != nil {
-		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Warning("Failed to send data!")
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "main", "method": "main"}).Warn("Failed to send data!")
 	}
 	// Backup
 	sigChan := make(chan os.Signal, 1)
