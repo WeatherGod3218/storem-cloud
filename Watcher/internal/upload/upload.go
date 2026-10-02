@@ -21,7 +21,7 @@ import (
 )
 
 const MINIMUM_VIDEO_LENGTH = 5
-const MAX_VIDEO_UPLOADS = 4
+const MAX_VIDEO_UPLOADS = 2
 
 var client *tusgo.Client
 
