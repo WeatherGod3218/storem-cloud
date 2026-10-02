@@ -35,7 +35,10 @@ services:
     build: ./Watcher/
     networks:
       - storem-cloud
-    volumes:
+    volumes: 
+      - type: bind
+        source: "E:/AssetFolder/BackUp/Video Files/EditedFootage/Short Videos"
+        target: /shortvideos
       - type: bind
         source: "E:/AssetFolder/BackUp/Video Files/MedalFiles/Clips"
         target: /clips

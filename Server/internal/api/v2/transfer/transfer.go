@@ -23,62 +23,78 @@ import (
 	"github.com/tus/tusd/v2/pkg/s3store"
 )
 
+const MAX_VIDEO_PROCESSES = 4
+
 var Handler *tusd.Handler
+var VideoProcessingSem chan struct{} = make(chan struct{}, MAX_VIDEO_PROCESSES)
+
+func processUpload(event tusd.HookEvent) error {
+	var uploadS3Key string
+	if event.Upload.Storage != nil {
+		uploadS3Key = event.Upload.Storage["Key"]
+	} else {
+		return errors.New("Upload did not have any storage metadata!")
+	}
+
+	filelength, err := strconv.ParseFloat(event.Upload.MetaData["video_length"], 64)
+	if err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Unable to parse filelength")
+		return err
+	}
+
+	if err := thumbnails.GenerateThumbnailFromVideo(uploadS3Key, filelength); err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus", "Id": event.Upload.ID}).Warning("Unable to generate thumbnail!")
+		return err
+	}
+
+	fileModMicro, err := strconv.ParseInt(event.Upload.MetaData["file_mod_date"], 10, 64)
+	if err != nil {
+		logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Unable to parse file mod date")
+		return err
+	}
+
+	userId := event.HTTPRequest.Header.Get("X-User-Id")
+	user, ok := users.GetUserByAccessId(userId)
+	if ok != true {
+		return errors.New("failed to get user access")
+	}
+
+	fileModDate := time.UnixMicro(int64(fileModMicro))
+
+	entry := models.VideoDatabaseEntry{
+		Filename:    event.Upload.MetaData["filename"],
+		FileSize:    event.Upload.Size,
+		FileLength:  filelength,
+		FileModDate: fileModDate,
+		VideoID:     uploadS3Key,
+		UserID:      userId,
+	}
+
+	rowId, err := database.CreateVideoRow(entry)
+	if err != nil {
+		return err
+	}
+
+	database.LogAction(user, fmt.Sprintf(`Created New Video "%s"`,
+		database.ActionTagName(rowId),
+	))
+
+	return nil
+}
 
 func OnVideoUpload() {
 	for event := range Handler.CompleteUploads {
-		var uploadS3Key string
-		if event.Upload.Storage != nil {
-			uploadS3Key = event.Upload.Storage["Key"]
-		} else {
-			logging.Logger.Info("Upload did not have any storage metadata!")
+		VideoProcessingSem <- struct{}{}
 
-			return
-		}
+		go func(event tusd.HookEvent) {
+			defer func() {
+				<-VideoProcessingSem
+			}()
 
-		filelength, err := strconv.ParseFloat(event.Upload.MetaData["video_length"], 64)
-		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Unable to parse filelength")
-			return
-		}
-
-		if err := thumbnails.GenerateThumbnailFromVideo(uploadS3Key, filelength); err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus", "Id": event.Upload.ID}).Warning("Unable to generate thumbnail!")
-			return
-		}
-
-		fileModMicro, err := strconv.ParseInt(event.Upload.MetaData["file_mod_date"], 10, 64)
-		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Unable to parse file mod date")
-			return
-		}
-
-		userId := event.HTTPRequest.Header.Get("X-User-Id")
-		user, ok := users.GetUserByAccessId(userId)
-		if ok != true {
-			return
-		}
-
-		fileModDate := time.UnixMicro(int64(fileModMicro))
-
-		entry := models.VideoDatabaseEntry{
-			Filename:    event.Upload.MetaData["filename"],
-			FileSize:    event.Upload.Size,
-			FileLength:  filelength,
-			FileModDate: fileModDate,
-			VideoID:     uploadS3Key,
-			UserID:      userId,
-		}
-
-		rowId, err := database.CreateVideoRow(entry)
-		if err != nil {
-			logging.Logger.WithFields(logrus.Fields{"error": err, "module": "tus", "method": "InitTus"}).Warning("Unable to create database entry for video")
-			return
-		}
-
-		database.LogAction(user, fmt.Sprintf(`Created New Video "%s"`,
-			database.ActionTagName(rowId),
-		))
+			if err := processUpload(event); err != nil {
+				logging.Logger.Warnf("Error when processing upload: %s", err)
+			}
+		}(event)
 	}
 }
 
