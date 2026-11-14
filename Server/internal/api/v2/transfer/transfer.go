@@ -84,9 +84,9 @@ func processUpload(event tusd.HookEvent) error {
 
 func OnVideoUpload() {
 	for event := range Handler.CompleteUploads {
-		VideoProcessingSem <- struct{}{}
-
 		go func(event tusd.HookEvent) {
+			VideoProcessingSem <- struct{}{}
+
 			defer func() {
 				<-VideoProcessingSem
 			}()
