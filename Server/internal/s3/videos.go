@@ -119,8 +119,9 @@ func CreateGetPresignedVideoURL(uploadId string) (string, error) {
 	lifetime := GetPresignURLTime()
 
 	request, err := presign.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(BucketName),
-		Key:    aws.String(key),
+		Bucket:              aws.String(BucketName),
+		Key:                 aws.String(key),
+		ResponseContentType: aws.String("video/mp4"),
 	}, s3.WithPresignExpires(lifetime))
 	if err != nil {
 		return "", fmt.Errorf("unable to create presigned url")
